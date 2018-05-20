@@ -1,7 +1,5 @@
 package com.kirat.solutions.domain;
 
-import java.util.List;
-
 public class CreateBinderRequest {
 
 	String htmlContent; 

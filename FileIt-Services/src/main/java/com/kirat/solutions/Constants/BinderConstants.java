@@ -9,6 +9,8 @@ public class BinderConstants {
 	public static final String TYPE = "type";
 	public static final String ID = "id";
 	public static final String VERSION = "version";
+	public static final String BASEPATH = "D:\files";
 	public static final String EXTENSION = ".xml";
 	public static final String IMG_EXTENSION = ".jpg";
+	public static final String CONTXT_PATH_NAMES = "CONTXT_PATH_NAMES";
 }

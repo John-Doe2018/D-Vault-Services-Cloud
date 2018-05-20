@@ -1,4 +1,4 @@
-package com.tcs.dummyproject.helloworld;
+package com.kirat.solutions.webservice;
 
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -25,13 +25,20 @@ public class helloWorldService {
 	@Path("getMasterJson")
 	@Produces("application/json")
 	public String getMasterJson() throws FileNotFoundException, IOException, ParseException {
-		String filePath = FileInfoPropertyReader.getInstance().getString("masterjson.file.path");
-		JSONParser parser = new JSONParser();
-		FileReader oFileReader = new FileReader(filePath);
-		Object object = parser.parse(oFileReader);
-		oFileReader.close();
-		JSONObject jsonObject = (JSONObject) object;
-		return jsonObject.toJSONString();
+		try {
+			String filePath = FileInfoPropertyReader.getInstance().getString("masterjson.file.path");
+			JSONParser parser = new JSONParser();
+			FileReader oFileReader = new FileReader(filePath);
+			Object object = parser.parse(oFileReader);
+			oFileReader.close();
+			JSONObject jsonObject = (JSONObject) object;
+			return jsonObject.toJSONString();
+		} catch (Exception e) {
+			JSONObject oJsonObject = new JSONObject();
+			oJsonObject.put("Error", "No Book Present");
+			return oJsonObject.toJSONString();
+		}
+
 	}
 
 	public String readJson(String filePath) {

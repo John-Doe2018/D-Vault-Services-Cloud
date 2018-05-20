@@ -13,6 +13,5 @@
 
 	<import resource="hello-world.xml"></import>
 	<import resource="binder-beans.xml"></import>
-	<bean id="jaxbJsonProvider" class="org.codehaus.jackson.jaxrs.JacksonJaxbJsonProvider"></bean>
-	
+	<bean id="jaxbJsonProvider" class="org.codehaus.jackson.jaxrs.JacksonJaxbJsonProvider"/>
 </beans>

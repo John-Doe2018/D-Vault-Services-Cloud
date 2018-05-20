@@ -11,31 +11,47 @@ import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
 import com.kirat.solutions.util.FileInfoPropertyReader;
+import com.kirat.solutions.util.FileItException;
 
 public class DeleteBookProcessor {
 
 	@SuppressWarnings("unchecked")
-	public String deleteBookProcessor(String deleteBookRequest) throws IOException, ParseException {
+	public JSONObject deleteBookProcessor(String deleteBookRequest) throws FileItException {
 		JSONObject parentObj = new JSONObject();
-		String deleteMsg = null;
+		JSONObject deleteMsg = new JSONObject();
 		String filePath = FileInfoPropertyReader.getInstance().getString("masterjson.file.path");
 		JSONParser parser = new JSONParser();
-		FileReader oFileReader = new FileReader(filePath);
-		JSONObject array = (JSONObject) parser.parse(oFileReader);
-		oFileReader.close();
+		JSONObject array;
+		try {
+			FileReader oFileReader = new FileReader(filePath);
+			array = (JSONObject) parser.parse(oFileReader);
+			oFileReader.close();
+		} catch (IOException | ParseException e) {
+			// TODO Auto-generated catch block
+			// e.printStackTrace();
+			throw new FileItException(e.getMessage());
+		}
 		JSONArray jsonArray = (JSONArray) array.get("BookList");
 		for (Iterator<Object> iterator = jsonArray.iterator(); iterator.hasNext();) {
 			JSONObject book = (JSONObject) iterator.next();
 			if (book.containsKey(deleteBookRequest)) {
 				iterator.remove();
-				deleteMsg = "Deleted Successfully";
+				deleteMsg.put("Success", "Deleted Successfully");
+				break;
 			}
 		}
 		parentObj.put("BookList", jsonArray);
-		FileWriter jsonFile = new FileWriter(filePath);
-		jsonFile.write(parentObj.toJSONString());
-		jsonFile.flush();
-		jsonFile.close();
+		FileWriter jsonFile = null;
+		try {
+			jsonFile = new FileWriter(filePath);
+			jsonFile.write(parentObj.toJSONString());
+			jsonFile.flush();
+			jsonFile.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			// e.printStackTrace();
+			throw new FileItException(e.getMessage());
+		}
 		return deleteMsg;
 	}
 

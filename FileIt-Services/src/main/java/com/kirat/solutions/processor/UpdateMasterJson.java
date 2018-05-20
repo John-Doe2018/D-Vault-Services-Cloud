@@ -8,16 +8,19 @@ import java.io.IOException;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 
+import com.kirat.solutions.Constants.ErrorCodeConstants;
 import com.kirat.solutions.domain.BinderList;
+import com.kirat.solutions.util.ErrorMessageReader;
 import com.kirat.solutions.util.FileInfoPropertyReader;
+import com.kirat.solutions.util.FileItException;
 import com.kirat.solutions.util.FileUtil;
 import com.kirat.solutions.util.ReadJsonUtil;
 
 public class UpdateMasterJson {
-
 	@SuppressWarnings("unchecked")
-	public void prepareMasterJson(BinderList bookObject) throws Exception {
+	public String prepareMasterJson(BinderList bookObject) throws FileItException {
 		JSONParser parser = new JSONParser();
 		JSONObject obj = new JSONObject();
 		JSONObject superObj = new JSONObject();
@@ -28,34 +31,42 @@ public class UpdateMasterJson {
 		//getting the master Json File path
 		String filePath = FileInfoPropertyReader.getInstance().getString("masterjson.file.path");
 		//Check any book with same name already present or not
+		
 		File tmpDir = new File(filePath);
 		boolean isFile = tmpDir.exists();
+		String xmlFilePath = FileUtil.createDynamicFilePath(bookObject.getName());
 		if(isFile) {
 			isSameName = ReadJsonUtil.CheckBinderWithSameName(filePath,bookObject.getName());
 			if(isSameName) {
-				throw new Exception() ;
+				throw new FileItException(ErrorCodeConstants.ERR_CODE_0002, ErrorMessageReader.getInstance().getString(ErrorCodeConstants.ERR_CODE_0002));
 			}else {
+				try {
 				JSONObject array = (JSONObject) parser.parse(new FileReader(filePath));
 				JSONArray jsonArray = (JSONArray) array.get("BookList");
 				//Add the new object to existing
 				obj.put("Name", bookObject.getName());
 				obj.put("Classification",bookObject.getClassification());
-				String xmlFilePath = FileUtil.createDynamicFilePath(bookObject.getName());
 				obj.put("Path", xmlFilePath);
 				superObj.put(bookObject.getName(), obj);
 				jsonArray.add(superObj);
 				parentObj.put("BookList", jsonArray);
-				/*array.put(jsonArray);*/
-				FileWriter jsonFile = new FileWriter(filePath);
-				jsonFile.write(parentObj.toJSONString());
-				jsonFile.flush();
-				jsonFile.close();
+				FileWriter jsonFile;
+				
+					jsonFile = new FileWriter(filePath);
+					jsonFile.write(parentObj.toJSONString());
+					jsonFile.flush();
+					jsonFile.close();
+				} catch (IOException e) {
+					throw new FileItException(e.getMessage());
+				} catch (ParseException e) {
+					throw new FileItException(e.getMessage());
+				}
 			}
 		}
 		else if(!isSameName) {
 				obj.put("Name", bookObject.getName());
 				obj.put("Classification",bookObject.getClassification());
-				obj.put("Path", "D:\\files\\xmlFile.xml");
+				obj.put("Path", xmlFilePath);
 				superObj.put(bookObject.getName(), obj);
 				JSONArray bookList = new JSONArray();
 				bookList.add(superObj);
@@ -66,12 +77,12 @@ public class UpdateMasterJson {
 					jsonFile.flush();
 					jsonFile.close();
 				} catch (IOException e) {
-					e.printStackTrace();
+					throw new FileItException(e.getMessage());
 				}
 			}
 			else {
-				//throw Exception e
+				throw new FileItException(ErrorCodeConstants.ERR_CODE_0002, ErrorMessageReader.getInstance().getString(ErrorCodeConstants.ERR_CODE_0002));
 			}
+		return bookObject.getName();
 		}
-
 	}
