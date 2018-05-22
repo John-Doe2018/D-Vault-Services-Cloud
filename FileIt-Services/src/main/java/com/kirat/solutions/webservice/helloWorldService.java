@@ -15,12 +15,8 @@ import org.json.simple.parser.ParseException;
 import com.kirat.solutions.util.FileInfoPropertyReader;
 
 public class helloWorldService {
-	@GET
-	@Path("sayHello")
-	public String getConfigurationParameterValue() {
-		return "Hello World";
-	}
 
+	@SuppressWarnings("unchecked")
 	@GET
 	@Path("getMasterJson")
 	@Produces("application/json")
@@ -38,31 +34,6 @@ public class helloWorldService {
 			oJsonObject.put("Error", "No Book Present");
 			return oJsonObject.toJSONString();
 		}
-
-	}
-
-	public String readJson(String filePath) {
-		/*
-		 * byte[] jsonData = Files.;
-		 * 
-		 * //create ObjectMapper instance ObjectMapper objectMapper = new
-		 * ObjectMapper();
-		 * 
-		 * //convert json string to object BinderList emp =
-		 * objectMapper.readValue(jsonData, BinderList.class);
-		 * 
-		 * System.out.println("Employee Object\n"+emp);
-		 * 
-		 * //convert Object to json string BinderList emp1 = createEmployee();
-		 * //configure Object mapper for pretty print
-		 * objectMapper.configure(SerializationFeature.INDENT_OUTPUT, true);
-		 * 
-		 * //writing to console, can write to any output stream such as file
-		 * StringWriter stringEmp = new StringWriter();
-		 * objectMapper.writeValue(stringEmp, emp1);
-		 * System.out.println("Employee JSON is\n"+stringEmp); }
-		 */
-		return filePath;
 
 	}
 

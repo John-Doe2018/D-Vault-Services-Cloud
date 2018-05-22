@@ -1,12 +1,22 @@
 package com.kirat.solutions.util;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.net.URLConnection;
+import java.net.URLEncoder;
+import java.security.KeyFactory;
+import java.security.PrivateKey;
+import java.security.Signature;
+import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 import java.util.Properties;
 
@@ -30,11 +40,25 @@ public class CloudStorageConfig {
 	private static final String APPLICATION_NAME_PROPERTY = "application.name";
 	private static final String ACCOUNT_ID_PROPERTY = "account.id";
 	private static final String FOLDER_NAME_PROPERTY = "folder.name";
+	private static final String PRIVATE_KEY = "private.key";
+	private static final String API_URL = "api.url";
+	private String expiryTime;
+
+	// Get private key object from unencrypted PKCS#8 file content
+	private PrivateKey getPrivateKey() throws Exception {
+		// Remove extra characters in private key.
+		String realPK = getProperties().getProperty(PRIVATE_KEY).replaceAll("-----END PRIVATE KEY-----", "")
+				.replaceAll("-----BEGIN PRIVATE KEY-----", "").replaceAll("\n", "");
+		byte[] b1 = Base64.getDecoder().decode(realPK);
+		PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(b1);
+		KeyFactory kf = KeyFactory.getInstance("RSA");
+		return kf.generatePrivate(spec);
+	}
 
 	private Storage getStorage() throws Exception {
 
 		if (storage == null) {
-
+			PrivateKey oPrivateKey = getPrivateKey();
 			HttpTransport httpTransport = new NetHttpTransport();
 			JsonFactory jsonFactory = new JacksonFactory();
 
@@ -43,9 +67,7 @@ public class CloudStorageConfig {
 
 			Credential credential = new GoogleCredential.Builder().setTransport(httpTransport)
 					.setJsonFactory(jsonFactory).setServiceAccountId(getProperties().getProperty(ACCOUNT_ID_PROPERTY))
-					.setServiceAccountPrivateKeyFromP12File(new File(
-							this.getClass().getClassLoader().getResource("The Vault-1aa3097348e0.p12").getFile()))
-					.setServiceAccountScopes(scopes).build();
+					.setServiceAccountPrivateKey(oPrivateKey).setServiceAccountScopes(scopes).build();
 
 			storage = new Storage.Builder(httpTransport, jsonFactory, credential)
 					.setApplicationName(getProperties().getProperty(APPLICATION_NAME_PROPERTY)).build();
@@ -119,17 +141,18 @@ public class CloudStorageConfig {
 		}
 	}
 
-	public InputStream getFile(String bucketName, String fileName) throws FileItException, IOException {
-		Storage storage;
-		Storage.Objects.Get get;
-		try {
-			storage = getStorage();
-			get = storage.objects().get(bucketName, fileName);
-		} catch (Exception e) {
-			throw new FileItException("Exception Occured !!!");
-		}
-		return get.executeAsInputStream();
-
+	public String getFile(String bucketName, String filePath) throws Exception {
+		// Set Url expiry to one minute from now!
+		setExpiryTimeInEpoch();
+		String stringToSign = getSignInput(filePath);
+		PrivateKey pk = getPrivateKey();
+		String signedString = getSignedString(stringToSign, pk);
+		// URL encode the signed string so that we can add this URL
+		signedString = URLEncoder.encode(signedString, "UTF-8");
+		String signedUrl = getSignedUrl(signedString, filePath);
+		System.out.println(signedUrl);
+		String getOutput = sendGet(signedUrl);
+		return getOutput;
 	}
 
 	/**
@@ -238,5 +261,68 @@ public class CloudStorageConfig {
 			throw new FileItException("Exception Occured !!!");
 		}
 		return list;
+	}
+
+	private String sendGet(String url) throws Exception {
+
+		URL obj = new URL(url);
+		HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+
+		// optional default is GET
+		con.setRequestMethod("GET");
+
+		// add request header
+		con.setRequestProperty("User-Agent", "Mozilla/5.0");
+
+		int responseCode = con.getResponseCode();
+		System.out.println("\nSending 'GET' request to URL : " + url);
+		System.out.println("Response Code : " + responseCode);
+
+		BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+		String inputLine;
+		StringBuffer response = new StringBuffer();
+
+		while ((inputLine = in.readLine()) != null) {
+			response.append(inputLine);
+		}
+		in.close();
+
+		// print result
+		System.out.println(response.toString());
+		return response.toString();
+
+	}
+
+	// Set an expiry date for the signed url. Sets it at one minute ahead of
+	// current time.
+	// Represented as the epoch time (seconds since 1st January 1970)
+	private void setExpiryTimeInEpoch() {
+		long now = System.currentTimeMillis();
+		// expire in a minute!
+		// note the conversion to seconds as needed by GCS.
+		long expiredTimeInSeconds = (now + 60 * 1000L) / 1000;
+		expiryTime = expiredTimeInSeconds + "";
+	}
+
+	// The signed URL format as required by Google.
+	private String getSignedUrl(String signedString, String objectPath) throws Exception {
+		String signedUrl = getProperties().getProperty(API_URL) + objectPath + "?GoogleAccessId="
+				+ getProperties().getProperty(ACCOUNT_ID_PROPERTY) + "&Expires=" + expiryTime + "&Signature="
+				+ signedString;
+		return signedUrl;
+	}
+
+	// We sign the expiry time and bucket object path
+	private String getSignInput(String objectPath) {
+		return "GET" + "\n" + "" + "\n" + "" + "\n" + expiryTime + "\n" + objectPath;
+	}
+
+	// Use SHA256withRSA to sign the request
+	private String getSignedString(String input, PrivateKey pk) throws Exception {
+		Signature privateSignature = Signature.getInstance("SHA256withRSA");
+		privateSignature.initSign(pk);
+		privateSignature.update(input.getBytes("UTF-8"));
+		byte[] s = privateSignature.sign();
+		return Base64.getEncoder().encodeToString(s);
 	}
 }
