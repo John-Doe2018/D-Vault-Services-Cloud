@@ -1,8 +1,12 @@
 package com.kirat.solutions.processor;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
@@ -20,10 +24,17 @@ import org.codehaus.jackson.map.ObjectMapper;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Element;
 
+import com.google.api.client.http.InputStreamContent;
+import com.google.api.services.storage.Storage;
+import com.google.api.services.storage.model.ObjectAccessControl;
+import com.google.api.services.storage.model.StorageObject;
+import com.google.cloud.storage.Blob;
+import com.google.cloud.storage.StorageFactory;
 import com.kirat.solutions.Constants.BinderConstants;
 import com.kirat.solutions.domain.BinderList;
 import com.kirat.solutions.domain.Children;
 import com.kirat.solutions.domain.FileItContext;
+import com.kirat.solutions.util.CloudStorageConfig;
 import com.kirat.solutions.util.FileItException;
 import com.kirat.solutions.util.FileUtil;
 
@@ -38,6 +49,20 @@ public class TransformationProcessor {
 
 	public void prepareBinderXML(BinderList binderlist) throws FileItException {
 		String xmlFilePath = FileUtil.createDynamicFilePath(binderlist.getName());
+		System.out.println(xmlFilePath);
+		CloudStorageConfig cloudStorageConfig = new CloudStorageConfig();
+		String folderPath = null;
+		String bucketName = "1dvaultdata";
+		try {
+			/*folderPath = (String) cloudStorageConfig.getProperties().get("folder.name");
+			System.out.println(folderPath);
+			bucketName = (String) cloudStorageConfig.getProperties().get("bucket.name");
+			System.out.println(bucketName);*/
+		} catch (Exception e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		//String xmlFilePath = folderPath+"/"+binderlist.getName()+".xml";
 		try {
 			DocumentBuilderFactory documentFactory = DocumentBuilderFactory.newInstance();
 			DocumentBuilder documentBuilder = documentFactory.newDocumentBuilder();
@@ -89,6 +114,9 @@ public class TransformationProcessor {
 			DOMSource domSource = new DOMSource(document);
 			StreamResult streamResult = new StreamResult(new File(xmlFilePath));
 			transformer.transform(domSource, streamResult);
+			System.out.println("xml created @"+  xmlFilePath);
+			UploadFile.pushFilesToCloudStorage(xmlFilePath);
+			System.out.println("cloud storage has been pushed");
 		} catch (Exception e) {
 			throw new FileItException(e.getMessage());
 		}
