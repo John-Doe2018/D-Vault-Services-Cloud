@@ -1,8 +1,9 @@
 package com.kirat.solutions.webservice;
 
 import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -12,7 +13,7 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
-import com.kirat.solutions.util.FileInfoPropertyReader;
+import com.kirat.solutions.util.CloudStorageConfig;
 
 public class helloWorldService {
 
@@ -22,11 +23,11 @@ public class helloWorldService {
 	@Produces("application/json")
 	public String getMasterJson() throws FileNotFoundException, IOException, ParseException {
 		try {
-			String filePath = FileInfoPropertyReader.getInstance().getString("masterjson.file.path");
+			CloudStorageConfig oCloudStorageConfig = new CloudStorageConfig();
+			InputStream oInputStream = oCloudStorageConfig.getFile("1dvaultdata", "test.JSON");
 			JSONParser parser = new JSONParser();
-			FileReader oFileReader = new FileReader(filePath);
-			Object object = parser.parse(oFileReader);
-			oFileReader.close();
+			Object object = parser.parse(new InputStreamReader(oInputStream));
+			oInputStream.close();
 			JSONObject jsonObject = (JSONObject) object;
 			return jsonObject.toJSONString();
 		} catch (Exception e) {

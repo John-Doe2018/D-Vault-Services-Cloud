@@ -42,6 +42,7 @@ public class CloudStorageConfig {
 	private static final String FOLDER_NAME_PROPERTY = "folder.name";
 	private static final String PRIVATE_KEY = "private.key";
 	private static final String API_URL = "api.url";
+	private static final String BUCKET_NAME = "bucket.name";
 	private String expiryTime;
 
 	// Get private key object from unencrypted PKCS#8 file content
@@ -80,7 +81,7 @@ public class CloudStorageConfig {
 
 		if (properties == null) {
 			properties = new Properties();
-			InputStream stream = CloudStorageConfig.class.getResourceAsStream("/cloudstorage.properties");
+			InputStream stream = CloudStorageConfig.class.getResourceAsStream("/cloud.properties");
 			try {
 				properties.load(stream);
 			} catch (IOException e) {
@@ -141,17 +142,14 @@ public class CloudStorageConfig {
 		}
 	}
 
-	public String getFile(String bucketName, String filePath) throws Exception {
-		// Set Url expiry to one minute from now!
+	public InputStream getFile(String bucketName, String filePath) throws Exception {
 		setExpiryTimeInEpoch();
 		String stringToSign = getSignInput(filePath);
 		PrivateKey pk = getPrivateKey();
 		String signedString = getSignedString(stringToSign, pk);
-		// URL encode the signed string so that we can add this URL
 		signedString = URLEncoder.encode(signedString, "UTF-8");
 		String signedUrl = getSignedUrl(signedString, filePath);
-		System.out.println(signedUrl);
-		String getOutput = sendGet(signedUrl);
+		InputStream getOutput = sendGet(signedUrl);
 		return getOutput;
 	}
 
@@ -263,22 +261,14 @@ public class CloudStorageConfig {
 		return list;
 	}
 
-	private String sendGet(String url) throws Exception {
-
+	private InputStream sendGet(String url) throws Exception {
+		System.out.println(url);
 		URL obj = new URL(url);
 		HttpURLConnection con = (HttpURLConnection) obj.openConnection();
-
-		// optional default is GET
 		con.setRequestMethod("GET");
-
-		// add request header
 		con.setRequestProperty("User-Agent", "Mozilla/5.0");
-
-		int responseCode = con.getResponseCode();
-		System.out.println("\nSending 'GET' request to URL : " + url);
-		System.out.println("Response Code : " + responseCode);
-
-		BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+		return con.getInputStream();
+		/*BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
 		String inputLine;
 		StringBuffer response = new StringBuffer();
 
@@ -286,38 +276,27 @@ public class CloudStorageConfig {
 			response.append(inputLine);
 		}
 		in.close();
-
-		// print result
-		System.out.println(response.toString());
-		return response.toString();
+		return response.toString();*/
 
 	}
 
-	// Set an expiry date for the signed url. Sets it at one minute ahead of
-	// current time.
-	// Represented as the epoch time (seconds since 1st January 1970)
 	private void setExpiryTimeInEpoch() {
 		long now = System.currentTimeMillis();
-		// expire in a minute!
-		// note the conversion to seconds as needed by GCS.
-		long expiredTimeInSeconds = (now + 60 * 1000L) / 1000;
+		long expiredTimeInSeconds = (now + 120 * 1000L) / 1000;
 		expiryTime = expiredTimeInSeconds + "";
 	}
 
-	// The signed URL format as required by Google.
 	private String getSignedUrl(String signedString, String objectPath) throws Exception {
-		String signedUrl = getProperties().getProperty(API_URL) + objectPath + "?GoogleAccessId="
+		String signedUrl = getProperties().getProperty(API_URL)+ '/' + getProperties().getProperty(BUCKET_NAME) + '/' + objectPath + "?GoogleAccessId="
 				+ getProperties().getProperty(ACCOUNT_ID_PROPERTY) + "&Expires=" + expiryTime + "&Signature="
 				+ signedString;
 		return signedUrl;
 	}
 
-	// We sign the expiry time and bucket object path
-	private String getSignInput(String objectPath) {
-		return "GET" + "\n" + "" + "\n" + "" + "\n" + expiryTime + "\n" + objectPath;
+	private String getSignInput(String objectPath) throws Exception {
+		return "GET" + "\n" + "" + "\n" + "" + "\n" + expiryTime + "\n" + '/' + getProperties().getProperty(BUCKET_NAME) + '/' + objectPath;
 	}
 
-	// Use SHA256withRSA to sign the request
 	private String getSignedString(String input, PrivateKey pk) throws Exception {
 		Signature privateSignature = Signature.getInstance("SHA256withRSA");
 		privateSignature.initSign(pk);
