@@ -1,8 +1,9 @@
 package com.kirat.solutions.processor;
 
-import java.io.FileReader;
-import java.io.FileWriter;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.Iterator;
 
 import org.json.simple.JSONArray;
@@ -10,22 +11,22 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
-import com.kirat.solutions.util.FileInfoPropertyReader;
+import com.kirat.solutions.util.CloudStorageConfig;
 import com.kirat.solutions.util.FileItException;
 
 public class DeleteBookProcessor {
 
 	@SuppressWarnings("unchecked")
-	public JSONObject deleteBookProcessor(String deleteBookRequest) throws FileItException {
+	public JSONObject deleteBookProcessor(String deleteBookRequest) throws Exception {
 		JSONObject parentObj = new JSONObject();
 		JSONObject deleteMsg = new JSONObject();
-		String filePath = FileInfoPropertyReader.getInstance().getString("masterjson.file.path");
+		CloudStorageConfig oCloudStorageConfig = new CloudStorageConfig(); 
+		InputStream oInputStream = oCloudStorageConfig.getFile("1dvaultdata", "test.JSON");
 		JSONParser parser = new JSONParser();
 		JSONObject array;
 		try {
-			FileReader oFileReader = new FileReader(filePath);
-			array = (JSONObject) parser.parse(oFileReader);
-			oFileReader.close();
+			array = (JSONObject) parser.parse(new InputStreamReader(oInputStream));
+			oInputStream.close();
 		} catch (IOException | ParseException e) {
 			// TODO Auto-generated catch block
 			// e.printStackTrace();
@@ -41,12 +42,10 @@ public class DeleteBookProcessor {
 			}
 		}
 		parentObj.put("BookList", jsonArray);
-		FileWriter jsonFile = null;
 		try {
-			jsonFile = new FileWriter(filePath);
-			jsonFile.write(parentObj.toJSONString());
-			jsonFile.flush();
-			jsonFile.close();
+			InputStream is = new ByteArrayInputStream(parentObj.toJSONString().getBytes());
+			oCloudStorageConfig.uploadFile("1dvaultdata", "test.JSON", is, "application/json");
+			is.close();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			// e.printStackTrace();

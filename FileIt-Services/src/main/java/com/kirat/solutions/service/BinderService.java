@@ -25,15 +25,15 @@ import com.kirat.solutions.processor.DeleteBookProcessor;
 import com.kirat.solutions.processor.LookupBookProcessor;
 import com.kirat.solutions.processor.TransformationProcessor;
 import com.kirat.solutions.processor.UpdateMasterJson;
-import com.kirat.solutions.util.FileItException;
 import com.kirat.solutions.util.FileUtil;
 
 public class BinderService {
 
 	@POST
 	@Path("create")
-	public CreateBinderResponse createBinder(CreateBinderRequest createBinderRequest) throws FileItException {
+	public CreateBinderResponse createBinder(CreateBinderRequest createBinderRequest) throws Exception {
 		CreateBinderResponse createBinderResponse = new CreateBinderResponse();
+		FileUtil.checkTestJson();
 		String htmlContent = createBinderRequest.getHtmlContent();
 		String bookName = null;
 		TransformationProcessor transformationProcessor = new TransformationProcessor();
@@ -52,7 +52,7 @@ public class BinderService {
 	@POST
 	@Path("delete")
 	@Produces("application/json")
-	public JSONObject deleteBinder(DeleteBookRequest deleteBookRequest) throws FileItException {
+	public JSONObject deleteBinder(DeleteBookRequest deleteBookRequest) throws Exception {
 		String bookName = deleteBookRequest.getBookName();
 		DeleteBookProcessor deleteBookProcessor = new DeleteBookProcessor();
 		JSONObject succssMsg = deleteBookProcessor.deleteBookProcessor(bookName);
@@ -62,7 +62,7 @@ public class BinderService {
 	@POST
 	@Path("getBookTreeDetail")
 	@Produces("application/json")
-	public JSONObject BookTreeDetail(String bookName) throws FileItException {
+	public JSONObject BookTreeDetail(String bookName) throws Exception {
 		BookTreeProcessor bookTreeProcessor = new BookTreeProcessor();
 		JSONObject document = bookTreeProcessor.processBookXmltoDoc(bookName);
 		return document;
@@ -81,7 +81,7 @@ public class BinderService {
 
 	@POST
 	@Path("searchBook")
-	public SearchBookResponse searchBook(SearchBookRequest searchBookRequest) throws FileItException {
+	public SearchBookResponse searchBook(SearchBookRequest searchBookRequest) throws Exception {
 		SearchBookResponse bookResponse = new SearchBookResponse();
 		String bookName = searchBookRequest.getBookName();
 		JSONObject jsonObject = null;

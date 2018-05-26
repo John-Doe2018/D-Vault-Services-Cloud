@@ -1,7 +1,8 @@
 package com.kirat.solutions.processor;
 
-import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -9,20 +10,21 @@ import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
 import com.kirat.solutions.Constants.ErrorCodeConstants;
+import com.kirat.solutions.util.CloudStorageConfig;
 import com.kirat.solutions.util.ErrorMessageReader;
-import com.kirat.solutions.util.FileInfoPropertyReader;
 import com.kirat.solutions.util.FileItException;
 
 public class LookupBookProcessor {
 
-	public static JSONObject lookupBookbyName(String bookName) throws FileItException {
-		String filePath = FileInfoPropertyReader.getInstance().getString("masterjson.file.path");
+	public static JSONObject lookupBookbyName(String bookName) throws Exception {
+		CloudStorageConfig oCloudStorageConfig = new CloudStorageConfig();
+		InputStream oInputStream = oCloudStorageConfig.getFile("1dvaultdata", "test.JSON");
 		JSONParser parser = new JSONParser();
 		JSONObject book = null;
 		boolean bookNameFound = false;
 		JSONObject array = null;
 		try {
-			array = (JSONObject) parser.parse(new FileReader(filePath));
+			array = (JSONObject) parser.parse(new InputStreamReader(oInputStream));
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

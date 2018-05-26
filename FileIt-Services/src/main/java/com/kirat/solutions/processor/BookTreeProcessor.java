@@ -3,6 +3,8 @@ package com.kirat.solutions.processor;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -14,12 +16,12 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
-import com.kirat.solutions.util.FileInfoPropertyReader;
+import com.kirat.solutions.util.CloudStorageConfig;
 import com.kirat.solutions.util.FileItException;
 
 public class BookTreeProcessor {
 
-	public JSONObject processBookXmltoDoc(String bookName) throws FileItException {
+	public JSONObject processBookXmltoDoc(String bookName) throws Exception {
 
 		String line = "", str = "";
 		DocumentBuilderFactory documentFactory = DocumentBuilderFactory.newInstance();
@@ -27,13 +29,13 @@ public class BookTreeProcessor {
 		JSONObject json;
 		try {
 			documentBuilder = documentFactory.newDocumentBuilder();
-
-			String filePath = FileInfoPropertyReader.getInstance().getString("masterjson.file.path");
+			CloudStorageConfig oCloudStorageConfig = new CloudStorageConfig(); 
+			InputStream oInputStream = oCloudStorageConfig.getFile("1dvaultdata", "test.JSON");
 			String requiredXmlPath = "";
 			JSONParser parser = new JSONParser();
 			JSONObject array = null;
-			array = (JSONObject) parser.parse(new FileReader(filePath));
-
+			array = (JSONObject) parser.parse(new InputStreamReader(oInputStream));
+			oInputStream.close();
 			JSONArray jsonArray = (JSONArray) array.get("BookList");
 			for (Object obj : jsonArray) {
 				JSONObject book = (JSONObject) obj;

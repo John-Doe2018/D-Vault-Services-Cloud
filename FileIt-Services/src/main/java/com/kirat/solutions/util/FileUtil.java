@@ -1,5 +1,11 @@
 package com.kirat.solutions.util;
 
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+
 import com.kirat.solutions.Constants.BinderConstants;
 
 public class FileUtil {
@@ -17,5 +23,19 @@ public class FileUtil {
 		String modifiedfilePath = java.util.regex.Pattern.compile("\\\\").matcher(filePath).replaceAll("\\\\\\\\");
 		// = filePath.replaceAll("\\\\", "/") ;
 		return modifiedfilePath;
+	}
+	
+	public static void checkTestJson() throws Exception {
+		CloudStorageConfig oCloudStorageConfig = new CloudStorageConfig();
+		try {
+			oCloudStorageConfig.getFile("1dvaultdata", "test.JSON");
+		} catch (Exception e) {
+			JSONArray jsonArray = new JSONArray();
+			JSONObject parentObj = new JSONObject();
+			parentObj.put("BookList", jsonArray);
+			InputStream is = new ByteArrayInputStream(parentObj.toJSONString().getBytes());
+			oCloudStorageConfig.uploadFile("1dvaultdata", "test.JSON", is, "application/json");
+		}
+		
 	}
 }

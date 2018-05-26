@@ -1,15 +1,11 @@
 package com.kirat.solutions.util;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.net.URLConnection;
 import java.net.URLEncoder;
 import java.security.KeyFactory;
 import java.security.PrivateKey;
@@ -103,23 +99,19 @@ public class CloudStorageConfig {
 	 *            Absolute path of the file to upload
 	 * @throws Exception
 	 */
-	public void uploadFile(String bucketName, String filePath) throws Exception {
+	public void uploadFile(String bucketName, String filePath, InputStream oInputStream, String contentType)
+			throws Exception {
 
 		Storage storage = getStorage();
-		StorageObject object = new StorageObject();
-		object.setBucket(bucketName);
-		File file = new File(filePath);
-		InputStream stream = new FileInputStream(file);
 		try {
-			String contentType = URLConnection.guessContentTypeFromStream(stream);
-			InputStreamContent content = new InputStreamContent(contentType, stream);
-
-			Storage.Objects.Insert insert = storage.objects().insert(bucketName, null, content);
-			insert.setName(getProperties().getProperty(FOLDER_NAME_PROPERTY) + file.getName());
-
+			StorageObject object = new StorageObject();
+			object.setContentType(contentType);
+			InputStreamContent content = new InputStreamContent(contentType, oInputStream);
+			Storage.Objects.Insert insert = storage.objects().insert(bucketName, object, content);
+			insert.setName(filePath);
 			insert.execute();
 		} finally {
-			stream.close();
+			oInputStream.close();
 		}
 	}
 
@@ -261,22 +253,24 @@ public class CloudStorageConfig {
 		return list;
 	}
 
-	private InputStream sendGet(String url) throws Exception {
+	private InputStream sendGet(String url) throws IOException {
+		URL obj;
+		HttpURLConnection con;
+		obj = new URL(url);
+		con = (HttpURLConnection) obj.openConnection();
 		System.out.println(url);
-		URL obj = new URL(url);
-		HttpURLConnection con = (HttpURLConnection) obj.openConnection();
 		con.setRequestMethod("GET");
 		con.setRequestProperty("User-Agent", "Mozilla/5.0");
 		return con.getInputStream();
-		/*BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
-		String inputLine;
-		StringBuffer response = new StringBuffer();
 
-		while ((inputLine = in.readLine()) != null) {
-			response.append(inputLine);
-		}
-		in.close();
-		return response.toString();*/
+		/*
+		 * BufferedReader in = new BufferedReader(new
+		 * InputStreamReader(con.getInputStream())); String inputLine; StringBuffer
+		 * response = new StringBuffer();
+		 * 
+		 * while ((inputLine = in.readLine()) != null) { response.append(inputLine); }
+		 * in.close(); return response.toString();
+		 */
 
 	}
 
@@ -287,14 +281,15 @@ public class CloudStorageConfig {
 	}
 
 	private String getSignedUrl(String signedString, String objectPath) throws Exception {
-		String signedUrl = getProperties().getProperty(API_URL)+ '/' + getProperties().getProperty(BUCKET_NAME) + '/' + objectPath + "?GoogleAccessId="
-				+ getProperties().getProperty(ACCOUNT_ID_PROPERTY) + "&Expires=" + expiryTime + "&Signature="
-				+ signedString;
+		String signedUrl = getProperties().getProperty(API_URL) + '/' + getProperties().getProperty(BUCKET_NAME) + '/'
+				+ objectPath + "?GoogleAccessId=" + getProperties().getProperty(ACCOUNT_ID_PROPERTY) + "&Expires="
+				+ expiryTime + "&Signature=" + signedString;
 		return signedUrl;
 	}
 
 	private String getSignInput(String objectPath) throws Exception {
-		return "GET" + "\n" + "" + "\n" + "" + "\n" + expiryTime + "\n" + '/' + getProperties().getProperty(BUCKET_NAME) + '/' + objectPath;
+		return "GET" + "\n" + "" + "\n" + "" + "\n" + expiryTime + "\n" + '/' + getProperties().getProperty(BUCKET_NAME)
+				+ '/' + objectPath;
 	}
 
 	private String getSignedString(String input, PrivateKey pk) throws Exception {
