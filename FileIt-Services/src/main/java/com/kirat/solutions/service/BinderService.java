@@ -40,13 +40,12 @@ public class BinderService {
 		CreateBinderResponse createBinderResponse = new CreateBinderResponse();
 		FileUtil.checkTestJson();
 		String htmlContent = createBinderRequest.getHtmlContent();
-		String bookName = null;
 		TransformationProcessor transformationProcessor = new TransformationProcessor();
 		BinderList listOfBinderObj = transformationProcessor.createBinderList(htmlContent);
 		transformationProcessor.processHtmlToBinderXml(listOfBinderObj);
 		// append in MasterJson
 		UpdateMasterJson updateMasterJson = new UpdateMasterJson();
-		bookName = updateMasterJson.prepareMasterJson(listOfBinderObj);
+		String bookName = updateMasterJson.prepareMasterJson(listOfBinderObj);
 		// Prepare the Content Structure of the book with image
 		createBinderResponse.setSuccessMsg("Binder Successfully Created.");
 		return createBinderResponse;
@@ -62,11 +61,13 @@ public class BinderService {
 			Attachment file = multipart.getAttachment("file");
 			Attachment file1 = multipart.getAttachment("bookName");
 			Attachment file2 = multipart.getAttachment("path");
+			Attachment file3 = multipart.getAttachment("type");
 			String bookName = file1.getObject(String.class);
 			String path = file2.getObject(String.class);
+			String type = file3.getObject(String.class);
 			InputStream fileStream = file.getObject(InputStream.class);
 			ContentProcessor contentProcessor = ContentProcessor.getInstance();
-			oJsonObject = contentProcessor.processContentImage(bookName, fileStream, path);
+			oJsonObject = contentProcessor.processContentImage(bookName, fileStream, path, type);
 		} catch (Exception ex) {
 			return Response.status(600).entity(ex.getMessage()).build();
 		}
