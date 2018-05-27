@@ -21,7 +21,6 @@ public class FileUtil {
 	// Path manipulation
 	public static String correctFilePath(String filePath) {
 		String modifiedfilePath = java.util.regex.Pattern.compile("\\\\").matcher(filePath).replaceAll("\\\\\\\\");
-		// = filePath.replaceAll("\\\\", "/") ;
 		return modifiedfilePath;
 	}
 	

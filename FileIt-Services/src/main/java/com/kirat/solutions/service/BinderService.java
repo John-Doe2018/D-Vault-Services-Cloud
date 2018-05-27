@@ -3,13 +3,18 @@ package com.kirat.solutions.service;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 
+import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 
+import org.apache.cxf.jaxrs.ext.multipart.Attachment;
+import org.apache.cxf.jaxrs.ext.multipart.MultipartBody;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.ParseException;
 
@@ -43,10 +48,29 @@ public class BinderService {
 		UpdateMasterJson updateMasterJson = new UpdateMasterJson();
 		bookName = updateMasterJson.prepareMasterJson(listOfBinderObj);
 		// Prepare the Content Structure of the book with image
-		ContentProcessor contentProcessor = ContentProcessor.getInstance();
-		contentProcessor.processContentImage(bookName);
 		createBinderResponse.setSuccessMsg("Binder Successfully Created.");
 		return createBinderResponse;
+	}
+
+	@POST
+	@Consumes(MediaType.MULTIPART_FORM_DATA)
+	@Produces(MediaType.APPLICATION_JSON)
+	@Path("imageConvert")
+	public Response submit(MultipartBody multipart) {
+		JSONObject oJsonObject;
+		try {
+			Attachment file = multipart.getAttachment("file");
+			Attachment file1 = multipart.getAttachment("bookName");
+			Attachment file2 = multipart.getAttachment("path");
+			String bookName = file1.getObject(String.class);
+			String path = file2.getObject(String.class);
+			InputStream fileStream = file.getObject(InputStream.class);
+			ContentProcessor contentProcessor = ContentProcessor.getInstance();
+			oJsonObject = contentProcessor.processContentImage(bookName, fileStream, path);
+		} catch (Exception ex) {
+			return Response.status(600).entity(ex.getMessage()).build();
+		}
+		return Response.status(200).entity(oJsonObject).build();
 	}
 
 	@POST

@@ -35,7 +35,6 @@ public class CloudStorageConfig {
 	private static final String PROJECT_ID_PROPERTY = "project.id";
 	private static final String APPLICATION_NAME_PROPERTY = "application.name";
 	private static final String ACCOUNT_ID_PROPERTY = "account.id";
-	private static final String FOLDER_NAME_PROPERTY = "folder.name";
 	private static final String PRIVATE_KEY = "private.key";
 	private static final String API_URL = "api.url";
 	private static final String BUCKET_NAME = "bucket.name";

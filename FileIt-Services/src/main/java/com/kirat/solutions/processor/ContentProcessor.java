@@ -1,8 +1,11 @@
 package com.kirat.solutions.processor;
 
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -10,9 +13,11 @@ import javax.imageio.ImageIO;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
+import org.json.simple.JSONObject;
 
 import com.kirat.solutions.Constants.BinderConstants;
 import com.kirat.solutions.domain.FileItContext;
+import com.kirat.solutions.util.CloudStorageConfig;
 import com.kirat.solutions.util.FileInfoPropertyReader;
 import com.kirat.solutions.util.FileItException;
 
@@ -20,7 +25,6 @@ public class ContentProcessor {
 	FileItContext fileItContext;
 	List<String> paths = new ArrayList<String>();
 	private static ContentProcessor INSTANCE;
-	static int pagecounter = 0;
 
 	public static synchronized ContentProcessor getInstance() {
 		if (null == INSTANCE) {
@@ -29,31 +33,33 @@ public class ContentProcessor {
 		return INSTANCE;
 	}
 
-	@SuppressWarnings({ "static-access", "unchecked" })
-	public void processContentImage(String bookName) throws FileItException {
-		PDDocument document = null;
-		BufferedImage bufferedImage = null;
-		String extension = BinderConstants.IMG_EXTENSION;
-		paths = (List<String>) fileItContext.get(BinderConstants.CONTXT_PATH_NAMES);
-
+	@SuppressWarnings("unchecked")
+	public JSONObject processContentImage(String bookName, InputStream inputFile, String path) throws FileItException {
+		JSONObject oJsonObject = new JSONObject();
+		CloudStorageConfig oCloudStorageConfig = new CloudStorageConfig();
 		try {
-			for (String path : paths) {
-				// i = counter;
-				document = PDDocument.load(path);
-				List<PDPage> pages = document.getDocumentCatalog().getAllPages();
-				// int count = document.getDocumentCatalog().getAllPages().size();
-				for (PDPage page : pages) {
-					pagecounter++;
-					String imagePath = createDyanmicImagePath(pagecounter, bookName, extension);
-					bufferedImage = page.convertToImage();
-					File outputFile = new File(imagePath);
-					ImageIO.write(bufferedImage, "jpg", outputFile);
-				}
+			PDDocument document = null;
+			BufferedImage bufferedImage = null;
+			int pagecounter = 0;
+			document = PDDocument.load(inputFile);
+			List<PDPage> pages = document.getDocumentCatalog().getAllPages();
+			for (PDPage page : pages) {
+				pagecounter++;
+				bufferedImage = page.convertToImage();
+				ByteArrayOutputStream os = new ByteArrayOutputStream();
+				ImageIO.write(bufferedImage, "gif", os);
+				InputStream is = new ByteArrayInputStream(os.toByteArray());
+				oCloudStorageConfig.uploadFile("1dvaultdata", path + pagecounter + BinderConstants.IMG_EXTENSION,
+						is, "image/jpeg");
+				is.close();
 			}
+			oJsonObject.put("Success", "File Uploaded Successfully");
 		} catch (IOException e) {
 			throw new FileItException(e.getMessage());
+		} catch (Exception e) {
+			throw new FileItException(e.getMessage());
 		}
-
+		return oJsonObject;
 	}
 
 	public static String createDyanmicImagePath(int i, String bookName, String extension) {

@@ -41,7 +41,6 @@ public class TransformationProcessor {
 
 	public void prepareBinderXML(BinderList binderlist) throws FileItException {
 		CloudStorageConfig oCloudStorageConfig = new CloudStorageConfig();
-		String folderPath = null;
 		String bucketName = "1dvaultdata";
 		try {
 			DocumentBuilderFactory documentFactory = DocumentBuilderFactory.newInstance();
