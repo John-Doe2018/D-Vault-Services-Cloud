@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
@@ -22,6 +24,7 @@ import com.kirat.solutions.domain.BinderList;
 import com.kirat.solutions.domain.CreateBinderRequest;
 import com.kirat.solutions.domain.CreateBinderResponse;
 import com.kirat.solutions.domain.DeleteBookRequest;
+import com.kirat.solutions.domain.GetImageRequest;
 import com.kirat.solutions.domain.SearchBookRequest;
 import com.kirat.solutions.domain.SearchBookResponse;
 import com.kirat.solutions.processor.BookTreeProcessor;
@@ -30,6 +33,8 @@ import com.kirat.solutions.processor.DeleteBookProcessor;
 import com.kirat.solutions.processor.LookupBookProcessor;
 import com.kirat.solutions.processor.TransformationProcessor;
 import com.kirat.solutions.processor.UpdateMasterJson;
+import com.kirat.solutions.util.CloudStorageConfig;
+import com.kirat.solutions.util.FileItException;
 import com.kirat.solutions.util.FileUtil;
 
 public class BinderService {
@@ -49,6 +54,44 @@ public class BinderService {
 		// Prepare the Content Structure of the book with image
 		createBinderResponse.setSuccessMsg("Binder Successfully Created.");
 		return createBinderResponse;
+	}
+
+	@POST
+	@Path("getImage")
+	@Produces(MediaType.APPLICATION_JSON)
+	@Consumes(MediaType.APPLICATION_JSON)
+	public List<String> getFile(GetImageRequest oGetImageRequest) throws Exception {
+		
+		CloudStorageConfig oCloudStorageConfig = new CloudStorageConfig();
+		List<String> oImages = new ArrayList<>();
+		List<String> oList = oCloudStorageConfig.listBucket("1dvaultdata");
+		int count = 0;
+		for (int i = 0; i < oList.size(); i++) {
+			if (oList.get(i).contains(oGetImageRequest.getBookName() + "/Images/")) {
+				count++;
+				String path = oGetImageRequest.getBookName() + "/Images/" + count + ".jpeg";
+				oImages.add(oCloudStorageConfig.getSignedString("1dvaultdata", path));
+			}
+		}
+		return oImages;
+	}
+
+	@POST
+	@Path("getFileCount")
+	@Produces(MediaType.APPLICATION_JSON)
+	@Consumes(MediaType.APPLICATION_JSON)
+	public JSONObject getFileCount(GetImageRequest oGetImageRequest) throws FileItException {
+		CloudStorageConfig oCloudStorageConfig = new CloudStorageConfig();
+		List<String> oList = oCloudStorageConfig.listBucket("1dvaultdata");
+		int count = 0;
+		for (int i = 0; i < oList.size(); i++) {
+			if (oList.get(i).contains(oGetImageRequest.getBookName() + "/Images/")) {
+				count++;
+			}
+		}
+		JSONObject oJsonObject = new JSONObject();
+		oJsonObject.put("Count", count);
+		return oJsonObject;
 	}
 
 	@POST

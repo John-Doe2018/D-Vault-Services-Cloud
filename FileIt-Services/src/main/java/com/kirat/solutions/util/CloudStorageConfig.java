@@ -143,6 +143,16 @@ public class CloudStorageConfig {
 		InputStream getOutput = sendGet(signedUrl);
 		return getOutput;
 	}
+	
+	public String getSignedString(String bucketName, String filePath) throws Exception {
+		setExpiryTimeForImage();
+		String stringToSign = getSignInput(filePath);
+		PrivateKey pk = getPrivateKey();
+		String signedString = getSignedString(stringToSign, pk);
+		signedString = URLEncoder.encode(signedString, "UTF-8");
+		String signedUrl = getSignedUrl(signedString, filePath);
+		return signedUrl;
+	}
 
 	/**
 	 * Deletes a file within a bucket
@@ -276,6 +286,12 @@ public class CloudStorageConfig {
 	private void setExpiryTimeInEpoch() {
 		long now = System.currentTimeMillis();
 		long expiredTimeInSeconds = (now + 120 * 1000L) / 1000;
+		expiryTime = expiredTimeInSeconds + "";
+	}
+	
+	private void setExpiryTimeForImage() {
+		long now = System.currentTimeMillis();
+		long expiredTimeInSeconds = (now + 20000 * 1000L) / 1000;
 		expiryTime = expiredTimeInSeconds + "";
 	}
 
