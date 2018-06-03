@@ -1,6 +1,6 @@
 package com.kirat.solutions.domain;
 
-public class LoginResponse {
+public class LoginResponse extends Response {
 
 	public String successMsg;
 
@@ -11,5 +11,5 @@ public class LoginResponse {
 	public void setSuccessMsg(String successMsg) {
 		this.successMsg = successMsg;
 	}
-	
+
 }

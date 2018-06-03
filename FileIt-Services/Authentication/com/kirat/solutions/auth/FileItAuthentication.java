@@ -7,11 +7,13 @@ import com.kirat.solutions.util.FileItException;
 
 public class FileItAuthentication {
 
-	public static void checkCredentials(String userName,String password) throws FileItException {
-		//System.setProperty("java.security.auth.login.config", "jaas.config");
+	public static void checkCredentials(String userName, String password) throws FileItException {
+		System.setProperty("java.security.auth.login.config",
+				FileItAuthentication.class.getClassLoader().getResource("jaas.config").getPath());
 
-		/*String name = "myName";
-		String password = "myPassword";*/
+		/*
+		 * String name = "myName"; String password = "myPassword";
+		 */
 
 		try {
 			LoginContext lc = new LoginContext("FileItLogin", new FileItCallbackHandler(userName, password));
@@ -21,4 +23,3 @@ public class FileItAuthentication {
 		}
 	}
 }
-	
