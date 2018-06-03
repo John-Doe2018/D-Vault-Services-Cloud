@@ -4,8 +4,11 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
@@ -17,7 +20,9 @@ import javax.ws.rs.core.Response.ResponseBuilder;
 
 import org.apache.cxf.jaxrs.ext.multipart.Attachment;
 import org.apache.cxf.jaxrs.ext.multipart.MultipartBody;
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
 import com.kirat.solutions.domain.BinderList;
@@ -61,7 +66,7 @@ public class BinderService {
 	@Produces(MediaType.APPLICATION_JSON)
 	@Consumes(MediaType.APPLICATION_JSON)
 	public List<String> getFile(GetImageRequest oGetImageRequest) throws Exception {
-		
+
 		CloudStorageConfig oCloudStorageConfig = new CloudStorageConfig();
 		List<String> oImages = new ArrayList<>();
 		List<String> oList = oCloudStorageConfig.listBucket("1dvaultdata");
@@ -157,5 +162,26 @@ public class BinderService {
 		jsonObject = lookupBookProcessor.lookupBookbyName(bookName);
 		bookResponse.setJsonObject(jsonObject);
 		return bookResponse;
+	}
+
+	@POST
+	@Path("advancedSearch")
+	public JSONArray advancedSearch() throws Exception {
+		CloudStorageConfig oCloudStorageConfig = new CloudStorageConfig();
+		InputStream oInputStream = oCloudStorageConfig.getFile("1dvaultdata", "test.JSON");
+		JSONParser parser = new JSONParser();
+		JSONObject array = null;
+		array = (JSONObject) parser.parse(new InputStreamReader(oInputStream));
+		JSONArray jsonArray = (JSONArray) array.get("BookList");
+		JSONArray oArray = new JSONArray();
+		for (Object obj : jsonArray) {
+			JSONObject book = (JSONObject) obj;
+			Set<String> keys = book.keySet();
+			for (String s : keys) {
+				oArray.add(s);
+			}
+		}
+		return oArray;
+
 	}
 }
