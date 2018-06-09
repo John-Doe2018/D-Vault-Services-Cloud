@@ -10,6 +10,7 @@ import javax.xml.bind.Unmarshaller;
 import com.kirat.solutions.Constants.ErrorCodeConstants;
 import com.kirat.solutions.domain.User;
 import com.kirat.solutions.domain.Users;
+import com.kirat.solutions.util.CloudPropertiesReader;
 import com.kirat.solutions.util.CloudStorageConfig;
 import com.kirat.solutions.util.ErrorMessageReader;
 import com.kirat.solutions.util.FileItException;
@@ -25,7 +26,8 @@ public class GetOrValidateUser {
 		Unmarshaller un;
 		Users userList = null;
 		try {
-			InputStream oInputStream = oCloudStorageConfig.getFile("1dvaultdata", filePath);
+			InputStream oInputStream = oCloudStorageConfig
+					.getFile(CloudPropertiesReader.getInstance().getString("bucket.name"), filePath);
 			JAXBContext context = JAXBContext.newInstance(Users.class);
 			un = context.createUnmarshaller();
 		//	userList = (Users) un.unmarshal(new File(xmlPath));

@@ -12,6 +12,7 @@ import org.json.simple.parser.ParseException;
 
 import com.kirat.solutions.Constants.ErrorCodeConstants;
 import com.kirat.solutions.domain.BinderList;
+import com.kirat.solutions.util.CloudPropertiesReader;
 import com.kirat.solutions.util.CloudStorageConfig;
 import com.kirat.solutions.util.ErrorMessageReader;
 import com.kirat.solutions.util.FileItException;
@@ -33,7 +34,8 @@ public class UpdateMasterJson {
 		// FileInfoPropertyReader.getInstance().getString("masterjson.file.path");
 		// Check any book with same name already present or not
 		CloudStorageConfig oCloudStorageConfig = new CloudStorageConfig();
-		InputStream oInputStream = oCloudStorageConfig.getFile("1dvaultdata", "test.JSON");
+		InputStream oInputStream = oCloudStorageConfig
+				.getFile(CloudPropertiesReader.getInstance().getString("bucket.name"), "test.JSON");
 		String xmlFilePath = FileUtil.createDynamicFilePath(bookObject.getName());
 		JSONObject array = (JSONObject) parser.parse(new InputStreamReader(oInputStream));
 		JSONArray jsonArray = (JSONArray) array.get("BookList");
@@ -52,7 +54,8 @@ public class UpdateMasterJson {
 					jsonArray.add(superObj);
 					parentObj.put("BookList", jsonArray);
 					InputStream is = new ByteArrayInputStream(parentObj.toJSONString().getBytes());
-					oCloudStorageConfig.uploadFile("1dvaultdata", "test.JSON", is, "application/json");
+					oCloudStorageConfig.uploadFile(CloudPropertiesReader.getInstance().getString("bucket.name"),
+							"test.JSON", is, "application/json");
 					is.close();
 				} catch (IOException e) {
 					throw new FileItException(e.getMessage());
@@ -70,7 +73,8 @@ public class UpdateMasterJson {
 			parentObj.put("BookList", bookList);
 			try {
 				InputStream is = new ByteArrayInputStream(parentObj.toJSONString().getBytes());
-				oCloudStorageConfig.uploadFile("1dvaultdata", "test.JSON", is, "application/json");
+				oCloudStorageConfig.uploadFile(CloudPropertiesReader.getInstance().getString("bucket.name"),
+						"test.JSON", is, "application/json");
 				is.close();
 			} catch (IOException e) {
 				throw new FileItException(e.getMessage());

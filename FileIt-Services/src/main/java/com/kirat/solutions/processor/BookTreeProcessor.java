@@ -15,6 +15,7 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
+import com.kirat.solutions.util.CloudPropertiesReader;
 import com.kirat.solutions.util.CloudStorageConfig;
 import com.kirat.solutions.util.FileItException;
 
@@ -28,8 +29,9 @@ public class BookTreeProcessor {
 		JSONObject json;
 		try {
 			documentBuilder = documentFactory.newDocumentBuilder();
-			CloudStorageConfig oCloudStorageConfig = new CloudStorageConfig(); 
-			InputStream oInputStream = oCloudStorageConfig.getFile("1dvaultdata", "test.JSON");
+			CloudStorageConfig oCloudStorageConfig = new CloudStorageConfig();
+			InputStream oInputStream = oCloudStorageConfig
+					.getFile(CloudPropertiesReader.getInstance().getString("bucket.name"), "test.JSON");
 			String requiredXmlPath = "";
 			JSONParser parser = new JSONParser();
 			JSONObject array = null;
@@ -44,7 +46,8 @@ public class BookTreeProcessor {
 				}
 			}
 			BufferedReader br = null;
-			InputStream xmlInputStream = oCloudStorageConfig.getFile("1dvaultdata", requiredXmlPath);
+			InputStream xmlInputStream = oCloudStorageConfig
+					.getFile(CloudPropertiesReader.getInstance().getString("bucket.name"), requiredXmlPath);
 			br = new BufferedReader(new InputStreamReader(xmlInputStream));
 
 			while ((line = br.readLine()) != null) {

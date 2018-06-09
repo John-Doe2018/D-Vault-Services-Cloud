@@ -6,7 +6,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -38,6 +37,7 @@ import com.kirat.solutions.processor.DeleteBookProcessor;
 import com.kirat.solutions.processor.LookupBookProcessor;
 import com.kirat.solutions.processor.TransformationProcessor;
 import com.kirat.solutions.processor.UpdateMasterJson;
+import com.kirat.solutions.util.CloudPropertiesReader;
 import com.kirat.solutions.util.CloudStorageConfig;
 import com.kirat.solutions.util.FileItException;
 import com.kirat.solutions.util.FileUtil;
@@ -69,13 +69,15 @@ public class BinderService {
 
 		CloudStorageConfig oCloudStorageConfig = new CloudStorageConfig();
 		List<String> oImages = new ArrayList<>();
-		List<String> oList = oCloudStorageConfig.listBucket("1dvaultdata");
+		List<String> oList = oCloudStorageConfig
+				.listBucket(CloudPropertiesReader.getInstance().getString("bucket.name"));
 		int count = 0;
 		for (int i = 0; i < oList.size(); i++) {
 			if (oList.get(i).contains(oGetImageRequest.getBookName() + "/Images/")) {
 				count++;
 				String path = oGetImageRequest.getBookName() + "/Images/" + count + ".jpeg";
-				oImages.add(oCloudStorageConfig.getSignedString("1dvaultdata", path));
+				oImages.add(oCloudStorageConfig
+						.getSignedString(CloudPropertiesReader.getInstance().getString("bucket.name"), path));
 			}
 		}
 		return oImages;
@@ -87,7 +89,8 @@ public class BinderService {
 	@Consumes(MediaType.APPLICATION_JSON)
 	public JSONObject getFileCount(GetImageRequest oGetImageRequest) throws FileItException {
 		CloudStorageConfig oCloudStorageConfig = new CloudStorageConfig();
-		List<String> oList = oCloudStorageConfig.listBucket("1dvaultdata");
+		List<String> oList = oCloudStorageConfig
+				.listBucket(CloudPropertiesReader.getInstance().getString("bucket.name"));
 		int count = 0;
 		for (int i = 0; i < oList.size(); i++) {
 			if (oList.get(i).contains(oGetImageRequest.getBookName() + "/Images/")) {
@@ -168,7 +171,8 @@ public class BinderService {
 	@Path("advancedSearch")
 	public JSONArray advancedSearch() throws Exception {
 		CloudStorageConfig oCloudStorageConfig = new CloudStorageConfig();
-		InputStream oInputStream = oCloudStorageConfig.getFile("1dvaultdata", "test.JSON");
+		InputStream oInputStream = oCloudStorageConfig
+				.getFile(CloudPropertiesReader.getInstance().getString("bucket.name"), "test.JSON");
 		JSONParser parser = new JSONParser();
 		JSONObject array = null;
 		array = (JSONObject) parser.parse(new InputStreamReader(oInputStream));

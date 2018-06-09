@@ -23,6 +23,7 @@ import org.json.simple.JSONObject;
 
 import com.kirat.solutions.Constants.BinderConstants;
 import com.kirat.solutions.domain.FileItContext;
+import com.kirat.solutions.util.CloudPropertiesReader;
 import com.kirat.solutions.util.CloudStorageConfig;
 import com.kirat.solutions.util.FileInfoPropertyReader;
 import com.kirat.solutions.util.FileItException;
@@ -63,8 +64,8 @@ public class ContentProcessor {
 					ByteArrayOutputStream os = new ByteArrayOutputStream();
 					ImageIO.write(bufferedImage, "gif", os);
 					InputStream is = new ByteArrayInputStream(os.toByteArray());
-					oCloudStorageConfig.uploadFile("1dvaultdata", path + pagecounter + BinderConstants.IMG_EXTENSION,
-							is, "image/jpeg");
+					oCloudStorageConfig.uploadFile(CloudPropertiesReader.getInstance().getString("bucket.name"),
+							path + pagecounter + BinderConstants.IMG_EXTENSION, is, "image/jpeg");
 					is.close();
 				}
 				oJsonObject.put("Success", "File Uploaded Successfully");
@@ -79,8 +80,8 @@ public class ContentProcessor {
 					ByteArrayOutputStream os = new ByteArrayOutputStream();
 					ImageIO.write(bufferedImage, "gif", os);
 					InputStream is = new ByteArrayInputStream(os.toByteArray());
-					oCloudStorageConfig.uploadFile("1dvaultdata", path + pagecounter + BinderConstants.IMG_EXTENSION,
-							is, "image/jpeg");
+					oCloudStorageConfig.uploadFile(CloudPropertiesReader.getInstance().getString("bucket.name"),
+							path + pagecounter + BinderConstants.IMG_EXTENSION, is, "image/jpeg");
 					is.close();
 				}
 				oJsonObject.put("Success", "File Uploaded Successfully");

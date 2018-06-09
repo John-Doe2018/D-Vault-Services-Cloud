@@ -23,18 +23,19 @@ public class FileUtil {
 		String modifiedfilePath = java.util.regex.Pattern.compile("\\\\").matcher(filePath).replaceAll("\\\\\\\\");
 		return modifiedfilePath;
 	}
-	
+
 	public static void checkTestJson() throws Exception {
 		CloudStorageConfig oCloudStorageConfig = new CloudStorageConfig();
 		try {
-			oCloudStorageConfig.getFile("1dvaultdata", "test.JSON");
+			oCloudStorageConfig.getFile(CloudPropertiesReader.getInstance().getString("bucket.name"), "test.JSON");
 		} catch (Exception e) {
 			JSONArray jsonArray = new JSONArray();
 			JSONObject parentObj = new JSONObject();
 			parentObj.put("BookList", jsonArray);
 			InputStream is = new ByteArrayInputStream(parentObj.toJSONString().getBytes());
-			oCloudStorageConfig.uploadFile("1dvaultdata", "test.JSON", is, "application/json");
+			oCloudStorageConfig.uploadFile(CloudPropertiesReader.getInstance().getString("bucket.name"), "test.JSON",
+					is, "application/json");
 		}
-		
+
 	}
 }

@@ -11,6 +11,7 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
+import com.kirat.solutions.util.CloudPropertiesReader;
 import com.kirat.solutions.util.CloudStorageConfig;
 import com.kirat.solutions.util.FileItException;
 
@@ -20,8 +21,9 @@ public class DeleteBookProcessor {
 	public JSONObject deleteBookProcessor(String deleteBookRequest) throws Exception {
 		JSONObject parentObj = new JSONObject();
 		JSONObject deleteMsg = new JSONObject();
-		CloudStorageConfig oCloudStorageConfig = new CloudStorageConfig(); 
-		InputStream oInputStream = oCloudStorageConfig.getFile("1dvaultdata", "test.JSON");
+		CloudStorageConfig oCloudStorageConfig = new CloudStorageConfig();
+		InputStream oInputStream = oCloudStorageConfig
+				.getFile(CloudPropertiesReader.getInstance().getString("bucket.name"), "test.JSON");
 		JSONParser parser = new JSONParser();
 		JSONObject array;
 		try {
@@ -44,7 +46,8 @@ public class DeleteBookProcessor {
 		parentObj.put("BookList", jsonArray);
 		try {
 			InputStream is = new ByteArrayInputStream(parentObj.toJSONString().getBytes());
-			oCloudStorageConfig.uploadFile("1dvaultdata", "test.JSON", is, "application/json");
+			oCloudStorageConfig.uploadFile(CloudPropertiesReader.getInstance().getString("bucket.name"), "test.JSON",
+					is, "application/json");
 			is.close();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block

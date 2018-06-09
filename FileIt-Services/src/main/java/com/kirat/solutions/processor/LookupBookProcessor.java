@@ -10,6 +10,7 @@ import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
 import com.kirat.solutions.Constants.ErrorCodeConstants;
+import com.kirat.solutions.util.CloudPropertiesReader;
 import com.kirat.solutions.util.CloudStorageConfig;
 import com.kirat.solutions.util.ErrorMessageReader;
 import com.kirat.solutions.util.FileItException;
@@ -18,7 +19,8 @@ public class LookupBookProcessor {
 
 	public static JSONObject lookupBookbyName(String bookName) throws Exception {
 		CloudStorageConfig oCloudStorageConfig = new CloudStorageConfig();
-		InputStream oInputStream = oCloudStorageConfig.getFile("1dvaultdata", "test.JSON");
+		InputStream oInputStream = oCloudStorageConfig
+				.getFile(CloudPropertiesReader.getInstance().getString("bucket.name"), "test.JSON");
 		JSONParser parser = new JSONParser();
 		JSONObject book = null;
 		boolean bookNameFound = false;

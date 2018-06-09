@@ -13,6 +13,7 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
+import com.kirat.solutions.util.CloudPropertiesReader;
 import com.kirat.solutions.util.CloudStorageConfig;
 
 public class helloWorldService {
@@ -24,7 +25,8 @@ public class helloWorldService {
 	public String getMasterJson() throws FileNotFoundException, IOException, ParseException {
 		try {
 			CloudStorageConfig oCloudStorageConfig = new CloudStorageConfig();
-			InputStream oInputStream = oCloudStorageConfig.getFile("1dvaultdata", "test.JSON");
+			InputStream oInputStream = oCloudStorageConfig
+					.getFile(CloudPropertiesReader.getInstance().getString("bucket.name"), "test.JSON");
 			JSONParser parser = new JSONParser();
 			Object object = parser.parse(new InputStreamReader(oInputStream));
 			oInputStream.close();

@@ -27,6 +27,7 @@ import com.kirat.solutions.Constants.BinderConstants;
 import com.kirat.solutions.domain.BinderList;
 import com.kirat.solutions.domain.Children;
 import com.kirat.solutions.domain.FileItContext;
+import com.kirat.solutions.util.CloudPropertiesReader;
 import com.kirat.solutions.util.CloudStorageConfig;
 import com.kirat.solutions.util.FileItException;
 
@@ -41,7 +42,7 @@ public class TransformationProcessor {
 
 	public void prepareBinderXML(BinderList binderlist) throws FileItException {
 		CloudStorageConfig oCloudStorageConfig = new CloudStorageConfig();
-		String bucketName = "1dvaultdata";
+		String bucketName = CloudPropertiesReader.getInstance().getString("bucket.name");
 		try {
 			DocumentBuilderFactory documentFactory = DocumentBuilderFactory.newInstance();
 			DocumentBuilder documentBuilder = documentFactory.newDocumentBuilder();
