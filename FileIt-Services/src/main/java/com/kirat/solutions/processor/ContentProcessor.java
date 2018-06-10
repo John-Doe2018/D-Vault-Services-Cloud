@@ -46,6 +46,13 @@ public class ContentProcessor {
 		JSONObject oJsonObject = new JSONObject();
 		CloudStorageConfig oCloudStorageConfig = new CloudStorageConfig();
 		PDDocument document = null;
+		List<String> obj = oCloudStorageConfig.listBucket(CloudPropertiesReader.getInstance().getString("bucket.name"));
+		String wordToSearchFor = bookName + '/' + "Images";
+		int pagecounter = 0;
+		for (String word : obj) {
+			if (word.contains(wordToSearchFor))
+				pagecounter++;
+		}
 		try {
 			if (type.equalsIgnoreCase("application/vnd.openxmlformats-officedocument.wordprocessingml.document")) {
 				XWPFDocument document1 = new XWPFDocument(OPCPackage.open(inputFile));
@@ -53,7 +60,6 @@ public class ContentProcessor {
 				OutputStream out = new FileOutputStream(new File("./test.pdf"));
 				PdfConverter.getInstance().convert(document1, out, options);
 				BufferedImage bufferedImage = null;
-				int pagecounter = 0;
 				File newFIle = new File("./test.pdf");
 				document = PDDocument.load(newFIle);
 				newFIle.delete();
@@ -71,7 +77,6 @@ public class ContentProcessor {
 				oJsonObject.put("Success", "File Uploaded Successfully");
 			} else {
 				BufferedImage bufferedImage = null;
-				int pagecounter = 0;
 				document = PDDocument.load(inputFile);
 				List<PDPage> pages = document.getDocumentCatalog().getAllPages();
 				for (PDPage page : pages) {
