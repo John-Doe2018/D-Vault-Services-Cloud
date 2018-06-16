@@ -19,6 +19,7 @@ import org.apache.poi.openxml4j.opc.OPCPackage;
 import org.apache.poi.xwpf.converter.pdf.PdfConverter;
 import org.apache.poi.xwpf.converter.pdf.PdfOptions;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 import com.kirat.solutions.Constants.BinderConstants;
@@ -41,8 +42,8 @@ public class ContentProcessor {
 	}
 
 	@SuppressWarnings("unchecked")
-	public JSONObject processContentImage(String bookName, InputStream inputFile, String path, String type)
-			throws FileItException {
+	public JSONObject processContentImage(String bookName, InputStream inputFile, String path, String type,
+			String fileName) throws FileItException {
 		JSONObject oJsonObject = new JSONObject();
 		CloudStorageConfig oCloudStorageConfig = new CloudStorageConfig();
 		PDDocument document = null;
@@ -53,6 +54,7 @@ public class ContentProcessor {
 			if (word.contains(wordToSearchFor))
 				pagecounter++;
 		}
+		JSONArray oJsonArray = new JSONArray();
 		try {
 			if (type.equalsIgnoreCase("application/vnd.openxmlformats-officedocument.wordprocessingml.document")) {
 				XWPFDocument document1 = new XWPFDocument(OPCPackage.open(inputFile));
@@ -72,6 +74,7 @@ public class ContentProcessor {
 					InputStream is = new ByteArrayInputStream(os.toByteArray());
 					oCloudStorageConfig.uploadFile(CloudPropertiesReader.getInstance().getString("bucket.name"),
 							path + pagecounter + BinderConstants.IMG_EXTENSION, is, "image/jpeg");
+					oJsonArray.add(path + pagecounter + BinderConstants.IMG_EXTENSION);
 					is.close();
 				}
 				oJsonObject.put("Success", "File Uploaded Successfully");
@@ -88,9 +91,13 @@ public class ContentProcessor {
 					oCloudStorageConfig.uploadFile(CloudPropertiesReader.getInstance().getString("bucket.name"),
 							path + pagecounter + BinderConstants.IMG_EXTENSION, is, "image/jpeg");
 					is.close();
+					oJsonArray.add(path + pagecounter + BinderConstants.IMG_EXTENSION);
 				}
 				oJsonObject.put("Success", "File Uploaded Successfully");
 			}
+			InputStream is = new ByteArrayInputStream(oJsonArray.toJSONString().getBytes());
+			oCloudStorageConfig.uploadFile(CloudPropertiesReader.getInstance().getString("bucket.name"),
+					"files/" + fileName + ".JSON", is, "application/json");
 		} catch (IOException e) {
 			throw new FileItException(e.getMessage());
 		} catch (Exception e) {

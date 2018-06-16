@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Iterator;
+import java.util.List;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -53,6 +54,15 @@ public class DeleteBookProcessor {
 			// TODO Auto-generated catch block
 			// e.printStackTrace();
 			throw new FileItException(e.getMessage());
+		}
+		List<String> oList = oCloudStorageConfig
+				.listBucket(CloudPropertiesReader.getInstance().getString("bucket.name"));
+		String wordToSearchFor = deleteBookRequest + '/' + "Images";
+		for (String word : oList) {
+			if (word.contains(wordToSearchFor)) {
+				oCloudStorageConfig.deleteFile(CloudPropertiesReader.getInstance().getString("bucket.name"), word);
+			}
+
 		}
 		return deleteMsg;
 	}

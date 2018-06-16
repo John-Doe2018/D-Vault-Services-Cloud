@@ -39,7 +39,6 @@ import com.kirat.solutions.processor.TransformationProcessor;
 import com.kirat.solutions.processor.UpdateMasterJson;
 import com.kirat.solutions.util.CloudPropertiesReader;
 import com.kirat.solutions.util.CloudStorageConfig;
-import com.kirat.solutions.util.FileItException;
 import com.kirat.solutions.util.FileUtil;
 
 public class BinderService {
@@ -71,35 +70,15 @@ public class BinderService {
 		List<String> oImages = new ArrayList<>();
 		List<String> oList = oCloudStorageConfig
 				.listBucket(CloudPropertiesReader.getInstance().getString("bucket.name"));
-		int count = 0;
-		for (int i = 0; i < oList.size(); i++) {
-			if (oList.get(i).contains(oGetImageRequest.getBookName() + "/Images/")) {
-				count++;
-				String path = oGetImageRequest.getBookName() + "/Images/" + count + ".jpeg";
+		String wordToSearchFor = oGetImageRequest.getBookName() + '/' + "Images";
+		for (String word : oList) {
+			if (word.contains(wordToSearchFor)) {
 				oImages.add(oCloudStorageConfig
-						.getSignedString(CloudPropertiesReader.getInstance().getString("bucket.name"), path));
+						.getSignedString(CloudPropertiesReader.getInstance().getString("bucket.name"), word));
 			}
+
 		}
 		return oImages;
-	}
-
-	@POST
-	@Path("getFileCount")
-	@Produces(MediaType.APPLICATION_JSON)
-	@Consumes(MediaType.APPLICATION_JSON)
-	public JSONObject getFileCount(GetImageRequest oGetImageRequest) throws FileItException {
-		CloudStorageConfig oCloudStorageConfig = new CloudStorageConfig();
-		List<String> oList = oCloudStorageConfig
-				.listBucket(CloudPropertiesReader.getInstance().getString("bucket.name"));
-		int count = 0;
-		for (int i = 0; i < oList.size(); i++) {
-			if (oList.get(i).contains(oGetImageRequest.getBookName() + "/Images/")) {
-				count++;
-			}
-		}
-		JSONObject oJsonObject = new JSONObject();
-		oJsonObject.put("Count", count);
-		return oJsonObject;
 	}
 
 	@POST
@@ -113,12 +92,14 @@ public class BinderService {
 			Attachment file1 = multipart.getAttachment("bookName");
 			Attachment file2 = multipart.getAttachment("path");
 			Attachment file3 = multipart.getAttachment("type");
+			Attachment file4 = multipart.getAttachment("filename");
 			String bookName = file1.getObject(String.class);
 			String path = file2.getObject(String.class);
 			String type = file3.getObject(String.class);
+			String fileName = file4.getObject(String.class);
 			InputStream fileStream = file.getObject(InputStream.class);
 			ContentProcessor contentProcessor = ContentProcessor.getInstance();
-			oJsonObject = contentProcessor.processContentImage(bookName, fileStream, path, type);
+			oJsonObject = contentProcessor.processContentImage(bookName, fileStream, path, type, fileName);
 		} catch (Exception ex) {
 			return Response.status(600).entity(ex.getMessage()).build();
 		}
