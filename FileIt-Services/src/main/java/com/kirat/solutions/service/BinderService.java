@@ -1,5 +1,7 @@
 package com.kirat.solutions.service;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -16,6 +18,13 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.transform.Result;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 
 import org.apache.cxf.jaxrs.ext.multipart.Attachment;
 import org.apache.cxf.jaxrs.ext.multipart.MultipartBody;
@@ -23,11 +32,16 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 import com.kirat.solutions.domain.BinderList;
 import com.kirat.solutions.domain.CreateBinderRequest;
 import com.kirat.solutions.domain.CreateBinderResponse;
 import com.kirat.solutions.domain.DeleteBookRequest;
+import com.kirat.solutions.domain.DeleteFileRequest;
 import com.kirat.solutions.domain.GetImageRequest;
 import com.kirat.solutions.domain.SearchBookRequest;
 import com.kirat.solutions.domain.SearchBookResponse;
@@ -39,6 +53,7 @@ import com.kirat.solutions.processor.TransformationProcessor;
 import com.kirat.solutions.processor.UpdateMasterJson;
 import com.kirat.solutions.util.CloudPropertiesReader;
 import com.kirat.solutions.util.CloudStorageConfig;
+import com.kirat.solutions.util.FileItException;
 import com.kirat.solutions.util.FileUtil;
 
 public class BinderService {
@@ -168,5 +183,59 @@ public class BinderService {
 		}
 		return oArray;
 
+	}
+
+	@POST
+	@Path("deleteFile")
+	public JSONObject deleteFile(DeleteFileRequest oDeleteFileRequest) throws FileItException {
+		CloudStorageConfig oCloudStorageConfig = new CloudStorageConfig();
+		InputStream oInputStream;
+		InputStream oInputStream1;
+		JSONObject oJsonObject = new JSONObject();
+		Element topicElement = null;
+		try {
+			oInputStream = oCloudStorageConfig.getFile(CloudPropertiesReader.getInstance().getString("bucket.name"),
+					"files/" + oDeleteFileRequest.getFileName().replaceFirst("[.][^.]+$", "") + ".JSON");
+			JSONParser parser = new JSONParser();
+			JSONArray array = (JSONArray) parser.parse(new InputStreamReader(oInputStream));
+			oInputStream.close();
+			for (int i = 0; i < array.size(); i++) {
+				oCloudStorageConfig.deleteFile(CloudPropertiesReader.getInstance().getString("bucket.name"),
+						array.get(i).toString());
+			}
+			oCloudStorageConfig.deleteFile(CloudPropertiesReader.getInstance().getString("bucket.name"),
+					"files/" + oDeleteFileRequest.getFileName().replaceFirst("[.][^.]+$", "") + ".JSON");
+			oInputStream1 = oCloudStorageConfig.getFile(CloudPropertiesReader.getInstance().getString("bucket.name"),
+					"files/" + oDeleteFileRequest.getBookName() + ".xml");
+			DocumentBuilderFactory docbf = DocumentBuilderFactory.newInstance();
+			docbf.setNamespaceAware(true);
+			DocumentBuilder docbuilder = docbf.newDocumentBuilder();
+			Document document = docbuilder.parse(oInputStream1);
+			NodeList fileList = document.getElementsByTagName("topic");
+			for (int i = 0; i < fileList.getLength(); i++) {
+				Node element = fileList.item(i);
+				if (element.getNodeType() == Node.ELEMENT_NODE) {
+					topicElement = (Element) element;
+					if (oDeleteFileRequest.getFileName().equals(topicElement.getAttribute("name"))) {
+						element.getParentNode().removeChild(topicElement);
+						break;
+					}
+				}
+			}
+			TransformerFactory transformerFactory = TransformerFactory.newInstance();
+			Transformer transformer = transformerFactory.newTransformer();
+			DOMSource domSource = new DOMSource(document);
+			ByteArrayOutputStream baos = new ByteArrayOutputStream();
+			Result res = new StreamResult(baos);
+			transformer.transform(domSource, res);
+			InputStream isFromFirstData = new ByteArrayInputStream(baos.toByteArray());
+			oCloudStorageConfig.uploadFile(CloudPropertiesReader.getInstance().getString("bucket.name"),
+					"files/" + oDeleteFileRequest.getBookName() + ".xml", isFromFirstData, "application/xml");
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		oJsonObject.put("Success", "Deleted Successfully");
+		return oJsonObject;
 	}
 }
