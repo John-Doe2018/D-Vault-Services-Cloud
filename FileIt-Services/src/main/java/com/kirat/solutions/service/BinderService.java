@@ -113,8 +113,15 @@ public class BinderService {
 			String type = file3.getObject(String.class);
 			String fileName = file4.getObject(String.class);
 			InputStream fileStream = file.getObject(InputStream.class);
+			ByteArrayOutputStream baos = new ByteArrayOutputStream();
+			org.apache.commons.io.IOUtils.copy(fileStream, baos);
+			byte[] bytes = baos.toByteArray();
 			ContentProcessor contentProcessor = ContentProcessor.getInstance();
-			oJsonObject = contentProcessor.processContentImage(bookName, fileStream, path, type, fileName);
+			//Read it from ByteArrayOutput Stream
+			ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
+			contentProcessor.processContent(bookName, bais, path, type,fileName);
+			ByteArrayInputStream bais1 = new ByteArrayInputStream(bytes);
+			oJsonObject = contentProcessor.processContentImage(bookName, bais1, path, type, fileName);
 		} catch (Exception ex) {
 			return Response.status(600).entity(ex.getMessage()).build();
 		}

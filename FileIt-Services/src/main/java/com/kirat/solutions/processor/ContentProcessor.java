@@ -122,5 +122,20 @@ public class ContentProcessor {
 		absoluteImgPath = fullContentDirectory.concat("\\" + counter.concat(extension));
 		return absoluteImgPath;
 	}
+	
+	public void processContent(String bookName, InputStream inputFile, String path, String type,String fileName)
+			throws FileItException {
 
+			CloudStorageConfig oCloudStorageConfig = new CloudStorageConfig();
+			try {
+			oCloudStorageConfig.uploadFile(CloudPropertiesReader.getInstance().getString("bucket.name"),
+					bookName + "/Contents/" +fileName+ ".pdf", inputFile, type);
+
+			//inputFile.close();
+
+			} catch (Exception e) {
+			// TODO Auto-generated catch block
+			throw new FileItException(e.getMessage());
+			}
+	}
 }
