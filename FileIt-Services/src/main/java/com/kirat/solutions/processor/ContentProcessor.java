@@ -97,7 +97,7 @@ public class ContentProcessor {
 			}
 			InputStream is = new ByteArrayInputStream(oJsonArray.toJSONString().getBytes());
 			oCloudStorageConfig.uploadFile(CloudPropertiesReader.getInstance().getString("bucket.name"),
-					"files/" + fileName + ".JSON", is, "application/json");
+					"files/" + fileName.subSequence(0, fileName.lastIndexOf('.')) + ".JSON", is, "application/json");
 		} catch (IOException e) {
 			throw new FileItException(e.getMessage());
 		} catch (Exception e) {
@@ -122,20 +122,20 @@ public class ContentProcessor {
 		absoluteImgPath = fullContentDirectory.concat("\\" + counter.concat(extension));
 		return absoluteImgPath;
 	}
-	
-	public void processContent(String bookName, InputStream inputFile, String path, String type,String fileName)
+
+	public void processContent(String bookName, InputStream inputFile, String path, String type, String fileName)
 			throws FileItException {
 
-			CloudStorageConfig oCloudStorageConfig = new CloudStorageConfig();
-			try {
+		CloudStorageConfig oCloudStorageConfig = new CloudStorageConfig();
+		try {
 			oCloudStorageConfig.uploadFile(CloudPropertiesReader.getInstance().getString("bucket.name"),
-					bookName + "/Contents/" +fileName+ ".pdf", inputFile, type);
+					bookName + "/Contents/" + fileName, inputFile, type);
 
-			//inputFile.close();
+			// inputFile.close();
 
-			} catch (Exception e) {
+		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			throw new FileItException(e.getMessage());
-			}
+		}
 	}
 }
