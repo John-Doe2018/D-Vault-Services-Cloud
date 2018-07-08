@@ -10,6 +10,8 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 import javax.imageio.ImageIO;
 
@@ -138,4 +140,32 @@ public class ContentProcessor {
 			throw new FileItException(e.getMessage());
 		}
 	}
+
+	public void getZipFile(String bookName, File oFile) throws FileItException, IOException {
+		FileOutputStream fos = new FileOutputStream(oFile);
+		ZipOutputStream zos = new ZipOutputStream(fos);
+		CloudStorageConfig oCloudStorageConfig = new CloudStorageConfig();
+		InputStream iIP;
+		List<String> obj = oCloudStorageConfig.listBucket(CloudPropertiesReader.getInstance().getString("bucket.name"));
+		String wordToSearchFor = bookName + '/' + "Contents";
+		for (String word : obj) {
+			if (word.contains(wordToSearchFor))
+				try {
+					iIP = oCloudStorageConfig.getFile(CloudPropertiesReader.getInstance().getString("bucket.name"),
+							word);
+					zos.putNextEntry(new ZipEntry(word.substring(word.indexOf("Contents/") + 9, word.length())));
+					byte[] bytes = new byte[1024];
+					int length;
+					while ((length = iIP.read(bytes)) >= 0) {
+						zos.write(bytes, 0, length);
+					}
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+		}
+		zos.closeEntry();
+		zos.close();
+	}
+
 }

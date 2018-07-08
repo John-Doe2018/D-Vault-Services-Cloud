@@ -3,6 +3,7 @@ package com.kirat.solutions.service;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -42,6 +43,7 @@ import com.kirat.solutions.domain.CreateBinderRequest;
 import com.kirat.solutions.domain.CreateBinderResponse;
 import com.kirat.solutions.domain.DeleteBookRequest;
 import com.kirat.solutions.domain.DeleteFileRequest;
+import com.kirat.solutions.domain.DownloadFileRequest;
 import com.kirat.solutions.domain.GetImageRequest;
 import com.kirat.solutions.domain.SearchBookRequest;
 import com.kirat.solutions.domain.SearchBookResponse;
@@ -97,6 +99,25 @@ public class BinderService {
 	}
 
 	@POST
+	@Path("download")
+	@Produces(MediaType.APPLICATION_JSON)
+	@Consumes(MediaType.APPLICATION_JSON)
+	public JSONObject downloadFile(DownloadFileRequest oDownloadFileRequest) throws Exception {
+		CloudStorageConfig oCloudStorageConfig = new CloudStorageConfig();
+		ContentProcessor oContentProcessor = new ContentProcessor();
+		File oFile = new File(this.getClass().getClassLoader().getResource("/").getPath() + "Files.zip");
+		oContentProcessor.getZipFile(oDownloadFileRequest.getBookName(), oFile);
+		InputStream fis = new FileInputStream(oFile);
+		oCloudStorageConfig.uploadFile(CloudPropertiesReader.getInstance().getString("bucket.name"),
+				"/" + oDownloadFileRequest.getBookName() + "/Files.zip", fis, "application/zip");
+		String url = oCloudStorageConfig.getSignedString(CloudPropertiesReader.getInstance().getString("bucket.name"),
+				"/" + oDownloadFileRequest.getBookName() + "/Files.zip");
+		JSONObject object = new JSONObject();
+		object.put("URL", url);
+		return object;
+	}
+
+	@POST
 	@Consumes(MediaType.MULTIPART_FORM_DATA)
 	@Produces(MediaType.APPLICATION_JSON)
 	@Path("imageConvert")
@@ -117,9 +138,9 @@ public class BinderService {
 			org.apache.commons.io.IOUtils.copy(fileStream, baos);
 			byte[] bytes = baos.toByteArray();
 			ContentProcessor contentProcessor = ContentProcessor.getInstance();
-			//Read it from ByteArrayOutput Stream
+			// Read it from ByteArrayOutput Stream
 			ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
-			contentProcessor.processContent(bookName, bais, path, type,fileName);
+			contentProcessor.processContent(bookName, bais, path, type, fileName);
 			ByteArrayInputStream bais1 = new ByteArrayInputStream(bytes);
 			oJsonObject = contentProcessor.processContentImage(bookName, bais1, path, type, fileName);
 		} catch (Exception ex) {
