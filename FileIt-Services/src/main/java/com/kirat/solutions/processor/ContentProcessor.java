@@ -1,12 +1,18 @@
 package com.kirat.solutions.processor;
 
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Graphics2D;
+import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
+import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
@@ -18,6 +24,8 @@ import javax.imageio.ImageIO;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.poi.openxml4j.opc.OPCPackage;
+import org.apache.poi.xslf.usermodel.XMLSlideShow;
+import org.apache.poi.xslf.usermodel.XSLFSlide;
 import org.apache.poi.xwpf.converter.pdf.PdfConverter;
 import org.apache.poi.xwpf.converter.pdf.PdfOptions;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
@@ -77,6 +85,31 @@ public class ContentProcessor {
 					oCloudStorageConfig.uploadFile(CloudPropertiesReader.getInstance().getString("bucket.name"),
 							path + pagecounter + BinderConstants.IMG_EXTENSION, is, "image/jpeg");
 					oJsonArray.add(path + pagecounter + BinderConstants.IMG_EXTENSION);
+					is.close();
+					os.close();
+				}
+				oJsonObject.put("Success", "File Uploaded Successfully");
+			} else if (type
+					.equalsIgnoreCase("application/vnd.openxmlformats-officedocument.presentationml.presentation")) {
+				XMLSlideShow ppt = new XMLSlideShow(inputFile);
+				XSLFSlide[] slides = ppt.getSlides();
+				Dimension pgsize = ppt.getPageSize();
+				for (int i = 0; i < slides.length; i++) {
+					pagecounter++;
+					BufferedImage img = new BufferedImage(pgsize.width, pgsize.height, BufferedImage.SCALE_SMOOTH);
+					Graphics2D graphics = img.createGraphics();
+					// clear the drawing area
+					graphics.setPaint(Color.white);
+					graphics.fill(new Rectangle2D.Float(0, 0, pgsize.width, pgsize.height));
+					// render
+					slides[i].draw(graphics);
+					// save the output
+					ByteArrayOutputStream os = new ByteArrayOutputStream();
+					javax.imageio.ImageIO.write(img, "JPG", os);
+					InputStream is = new ByteArrayInputStream(os.toByteArray());
+					oCloudStorageConfig.uploadFile(CloudPropertiesReader.getInstance().getString("bucket.name"),
+							path + pagecounter + BinderConstants.IMG_EXTENSION, is, "image/jpeg");
+					os.close();
 					is.close();
 				}
 				oJsonObject.put("Success", "File Uploaded Successfully");
