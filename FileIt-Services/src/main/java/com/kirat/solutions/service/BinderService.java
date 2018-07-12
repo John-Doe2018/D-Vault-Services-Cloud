@@ -38,7 +38,9 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
+import com.kirat.solutions.domain.AddFileRequest;
 import com.kirat.solutions.domain.BinderList;
+import com.kirat.solutions.domain.BookRequests;
 import com.kirat.solutions.domain.CreateBinderRequest;
 import com.kirat.solutions.domain.CreateBinderResponse;
 import com.kirat.solutions.domain.DeleteBookRequest;
@@ -47,6 +49,7 @@ import com.kirat.solutions.domain.DownloadFileRequest;
 import com.kirat.solutions.domain.GetImageRequest;
 import com.kirat.solutions.domain.SearchBookRequest;
 import com.kirat.solutions.domain.SearchBookResponse;
+import com.kirat.solutions.processor.AddFileProcessor;
 import com.kirat.solutions.processor.BookTreeProcessor;
 import com.kirat.solutions.processor.ContentProcessor;
 import com.kirat.solutions.processor.DeleteBookProcessor;
@@ -211,6 +214,16 @@ public class BinderService {
 		}
 		return oArray;
 
+	}
+
+	@POST
+	@Path("addFile")
+	public JSONObject addFiles(AddFileRequest oAddFileRequest) throws Exception {
+		AddFileProcessor oAddFileProcessor = new AddFileProcessor();
+		oAddFileProcessor.updateXML(oAddFileRequest.getBookName(), oAddFileRequest.getoBookRequests());
+		JSONObject oJsonObject = new JSONObject();
+		oJsonObject.put("Success", "File Added Successfully");
+		return oJsonObject;
 	}
 
 	@POST
