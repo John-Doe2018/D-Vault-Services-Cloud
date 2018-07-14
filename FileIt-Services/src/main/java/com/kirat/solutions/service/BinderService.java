@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -40,7 +41,6 @@ import org.w3c.dom.NodeList;
 
 import com.kirat.solutions.domain.AddFileRequest;
 import com.kirat.solutions.domain.BinderList;
-import com.kirat.solutions.domain.BookRequests;
 import com.kirat.solutions.domain.CreateBinderRequest;
 import com.kirat.solutions.domain.CreateBinderResponse;
 import com.kirat.solutions.domain.DeleteBookRequest;
@@ -90,13 +90,19 @@ public class BinderService {
 		List<String> oImages = new ArrayList<>();
 		List<String> oList = oCloudStorageConfig
 				.listBucket(CloudPropertiesReader.getInstance().getString("bucket.name"));
-		String wordToSearchFor = oGetImageRequest.getBookName() + '/' + "Images";
+		String wordToSearchFor = oGetImageRequest.getBookName() + '/' + "Images/";
+		List<Integer> oList2 = new ArrayList<>();
 		for (String word : oList) {
 			if (word.contains(wordToSearchFor)) {
-				oImages.add(oCloudStorageConfig
-						.getSignedString(CloudPropertiesReader.getInstance().getString("bucket.name"), word));
+				oList2.add(Integer.valueOf(word.substring(word.indexOf("Images/")+ 7 , word.indexOf(".jpeg"))));
 			}
 
+		}
+		Collections.sort(oList2);
+		for (int j = 0; j < oList2.size(); j++) {
+			oImages.add(
+					oCloudStorageConfig.getSignedString(CloudPropertiesReader.getInstance().getString("bucket.name"),
+							wordToSearchFor + oList2.get(j).toString() + ".jpeg"));
 		}
 		return oImages;
 	}
