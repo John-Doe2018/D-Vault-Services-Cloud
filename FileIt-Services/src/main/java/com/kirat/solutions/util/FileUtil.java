@@ -38,4 +38,22 @@ public class FileUtil {
 		}
 
 	}
+
+	public static boolean checkBookClassificationJson() throws Exception {
+		CloudStorageConfig oCloudStorageConfig = new CloudStorageConfig();
+		try {
+			oCloudStorageConfig.getFile(CloudPropertiesReader.getInstance().getString("bucket.name"),
+					"ClassificationMap.JSON");
+			return true;
+		} catch (Exception e) {
+			JSONArray jsonArray = new JSONArray();
+			JSONObject parentObj = new JSONObject();
+			parentObj.put("BlankArray", jsonArray);
+			InputStream is = new ByteArrayInputStream(parentObj.toJSONString().getBytes());
+			oCloudStorageConfig.uploadFile(CloudPropertiesReader.getInstance().getString("bucket.name"),
+					"ClassificationMap.JSON", is, "application/json");
+			return false;
+		}
+
+	}
 }

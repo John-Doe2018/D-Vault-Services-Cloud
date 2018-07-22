@@ -39,6 +39,7 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
+import com.kirat.solutions.Constants.BinderConstants;
 import com.kirat.solutions.domain.AddFileRequest;
 import com.kirat.solutions.domain.BinderList;
 import com.kirat.solutions.domain.CreateBinderRequest;
@@ -46,6 +47,7 @@ import com.kirat.solutions.domain.CreateBinderResponse;
 import com.kirat.solutions.domain.DeleteBookRequest;
 import com.kirat.solutions.domain.DeleteFileRequest;
 import com.kirat.solutions.domain.DownloadFileRequest;
+import com.kirat.solutions.domain.FileItContext;
 import com.kirat.solutions.domain.GetImageRequest;
 import com.kirat.solutions.domain.SearchBookRequest;
 import com.kirat.solutions.domain.SearchBookResponse;
@@ -54,10 +56,12 @@ import com.kirat.solutions.processor.BookTreeProcessor;
 import com.kirat.solutions.processor.ContentProcessor;
 import com.kirat.solutions.processor.DeleteBookProcessor;
 import com.kirat.solutions.processor.LookupBookProcessor;
+import com.kirat.solutions.processor.PrepareClassificationMap;
 import com.kirat.solutions.processor.TransformationProcessor;
 import com.kirat.solutions.processor.UpdateMasterJson;
 import com.kirat.solutions.util.CloudPropertiesReader;
 import com.kirat.solutions.util.CloudStorageConfig;
+import com.kirat.solutions.util.FileInfoPropertyReader;
 import com.kirat.solutions.util.FileItException;
 import com.kirat.solutions.util.FileUtil;
 
@@ -99,7 +103,7 @@ public class BinderService {
 		List<Integer> oList2 = new ArrayList<>();
 		for (String word : oList) {
 			if (word.contains(wordToSearchFor)) {
-				oList2.add(Integer.valueOf(word.substring(word.indexOf("Images/")+ 7 , word.indexOf(".jpeg"))));
+				oList2.add(Integer.valueOf(word.substring(word.indexOf("Images/") + 7, word.indexOf(".jpeg"))));
 			}
 
 		}
@@ -155,8 +159,10 @@ public class BinderService {
 			// Read it from ByteArrayOutput Stream
 			ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
 			oJsonObject = contentProcessor.processContent(bookName, bais, path, type, fileName);
-			/*ByteArrayInputStream bais1 = new ByteArrayInputStream(bytes);
-			oJsonObject = contentProcessor.processContentImage(bookName, bais1, path, type, fileName);*/
+			/*
+			 * ByteArrayInputStream bais1 = new ByteArrayInputStream(bytes); oJsonObject =
+			 * contentProcessor.processContentImage(bookName, bais1, path, type, fileName);
+			 */
 		} catch (Exception ex) {
 			return Response.status(600).entity(ex.getMessage()).build();
 		}
@@ -289,5 +295,16 @@ public class BinderService {
 		}
 		oJsonObject.put("Success", "Deleted Successfully");
 		return oJsonObject;
+	}
+
+	@POST
+	@Path("classifiedData")
+	public JSONObject getBookClassification() throws Exception {
+		if (!FileUtil.checkBookClassificationJson()) {
+			PrepareClassificationMap
+					.createClassifiedMap(FileInfoPropertyReader.getInstance().getString("masterjson.file.path"));
+		}
+		return (JSONObject) FileItContext.get(BinderConstants.CLASSIFIED_BOOK_NAMES);
+
 	}
 }

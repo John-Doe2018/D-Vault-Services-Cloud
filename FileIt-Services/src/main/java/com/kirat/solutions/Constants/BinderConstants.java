@@ -13,4 +13,5 @@ public class BinderConstants {
 	public static final String EXTENSION = ".xml";
 	public static final String IMG_EXTENSION = ".jpeg";
 	public static final String CONTXT_PATH_NAMES = "CONTXT_PATH_NAMES";
+	public static final String CLASSIFIED_BOOK_NAMES = "CLASSIFIED_BOOK_NAMES";
 }
