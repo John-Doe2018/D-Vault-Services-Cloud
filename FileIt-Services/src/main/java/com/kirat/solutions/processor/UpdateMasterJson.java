@@ -8,7 +8,6 @@ import java.io.InputStreamReader;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
 
 import com.kirat.solutions.Constants.ErrorCodeConstants;
 import com.kirat.solutions.domain.BinderList;
@@ -21,23 +20,29 @@ import com.kirat.solutions.util.ReadJsonUtil;
 
 public class UpdateMasterJson {
 	@SuppressWarnings("unchecked")
-	public String prepareMasterJson(BinderList bookObject) throws Exception {
+	public String prepareMasterJson(BinderList bookObject) throws FileItException {
 		JSONParser parser = new JSONParser();
 		JSONObject obj = new JSONObject();
 		JSONObject superObj = new JSONObject();
 		JSONObject parentObj = new JSONObject();
 
 		boolean isSameName = false;
-
+		String xmlFilePath = FileUtil.createDynamicFilePath(bookObject.getName());
 		// getting the master Json File path
 		// String filePath =
 		// FileInfoPropertyReader.getInstance().getString("masterjson.file.path");
 		// Check any book with same name already present or not
 		CloudStorageConfig oCloudStorageConfig = new CloudStorageConfig();
-		InputStream oInputStream = oCloudStorageConfig
-				.getFile(CloudPropertiesReader.getInstance().getString("bucket.name"), "test.JSON");
-		String xmlFilePath = FileUtil.createDynamicFilePath(bookObject.getName());
-		JSONObject array = (JSONObject) parser.parse(new InputStreamReader(oInputStream));
+		InputStream oInputStream = null;
+		JSONObject array = null;
+		try {
+			oInputStream = oCloudStorageConfig.getFile(CloudPropertiesReader.getInstance().getString("bucket.name"),
+					"test.JSON");
+			array = (JSONObject) parser.parse(new InputStreamReader(oInputStream));
+		} catch (Exception e1) {
+			// TODO Auto-generated catch block
+			throw new FileItException(e1.getMessage());
+		}
 		JSONArray jsonArray = (JSONArray) array.get("BookList");
 		if (oInputStream != null) {
 			isSameName = ReadJsonUtil.CheckBinderWithSameName(jsonArray, bookObject.getName());
@@ -59,7 +64,8 @@ public class UpdateMasterJson {
 					is.close();
 				} catch (IOException e) {
 					throw new FileItException(e.getMessage());
-				} catch (ParseException e) {
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
 					throw new FileItException(e.getMessage());
 				}
 			}
@@ -77,6 +83,9 @@ public class UpdateMasterJson {
 						"test.JSON", is, "application/json");
 				is.close();
 			} catch (IOException e) {
+				throw new FileItException(e.getMessage());
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
 				throw new FileItException(e.getMessage());
 			}
 		} else {

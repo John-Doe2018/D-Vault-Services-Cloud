@@ -65,9 +65,14 @@ public class BinderService {
 
 	@POST
 	@Path("create")
-	public CreateBinderResponse createBinder(CreateBinderRequest createBinderRequest) throws Exception {
+	public CreateBinderResponse createBinder(CreateBinderRequest createBinderRequest) throws FileItException {
 		CreateBinderResponse createBinderResponse = new CreateBinderResponse();
-		FileUtil.checkTestJson();
+		try {
+			FileUtil.checkTestJson();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		String htmlContent = createBinderRequest.getHtmlContent();
 		TransformationProcessor transformationProcessor = new TransformationProcessor();
 		BinderList listOfBinderObj = transformationProcessor.createBinderList(htmlContent);
@@ -149,9 +154,9 @@ public class BinderService {
 			ContentProcessor contentProcessor = ContentProcessor.getInstance();
 			// Read it from ByteArrayOutput Stream
 			ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
-			contentProcessor.processContent(bookName, bais, path, type, fileName);
-			ByteArrayInputStream bais1 = new ByteArrayInputStream(bytes);
-			oJsonObject = contentProcessor.processContentImage(bookName, bais1, path, type, fileName);
+			oJsonObject = contentProcessor.processContent(bookName, bais, path, type, fileName);
+			/*ByteArrayInputStream bais1 = new ByteArrayInputStream(bytes);
+			oJsonObject = contentProcessor.processContentImage(bookName, bais1, path, type, fileName);*/
 		} catch (Exception ex) {
 			return Response.status(600).entity(ex.getMessage()).build();
 		}

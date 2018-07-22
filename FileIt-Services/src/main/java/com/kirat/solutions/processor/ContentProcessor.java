@@ -5,14 +5,12 @@ import java.awt.Dimension;
 import java.awt.Graphics2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
-import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
@@ -158,20 +156,21 @@ public class ContentProcessor {
 		return absoluteImgPath;
 	}
 
-	public void processContent(String bookName, InputStream inputFile, String path, String type, String fileName)
+	public JSONObject processContent(String bookName, InputStream inputFile, String path, String type, String fileName)
 			throws FileItException {
-
+		JSONObject oJsonObject = new JSONObject();
 		CloudStorageConfig oCloudStorageConfig = new CloudStorageConfig();
 		try {
 			oCloudStorageConfig.uploadFile(CloudPropertiesReader.getInstance().getString("bucket.name"),
 					bookName + "/Contents/" + fileName, inputFile, type);
-
+			oJsonObject.put("Success", "File Uploaded Successfully");
 			// inputFile.close();
 
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			throw new FileItException(e.getMessage());
 		}
+		return oJsonObject;
 	}
 
 	public void getZipFile(String bookName, File oFile) throws FileItException, IOException {

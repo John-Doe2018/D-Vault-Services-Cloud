@@ -4,12 +4,17 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.security.InvalidKeyException;
 import java.security.KeyFactory;
+import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.Signature;
+import java.security.SignatureException;
+import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.util.ArrayList;
 import java.util.Base64;
@@ -41,17 +46,26 @@ public class CloudStorageConfig {
 	private String expiryTime;
 
 	// Get private key object from unencrypted PKCS#8 file content
-	private PrivateKey getPrivateKey() throws Exception {
+	private PrivateKey getPrivateKey() throws FileItException {
 		// Remove extra characters in private key.
 		String realPK = getProperties().getProperty(PRIVATE_KEY).replaceAll("-----END PRIVATE KEY-----", "")
 				.replaceAll("-----BEGIN PRIVATE KEY-----", "").replaceAll("\n", "");
 		byte[] b1 = Base64.getDecoder().decode(realPK);
 		PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(b1);
-		KeyFactory kf = KeyFactory.getInstance("RSA");
-		return kf.generatePrivate(spec);
+		KeyFactory kf;
+		try {
+			kf = KeyFactory.getInstance("RSA");
+			return kf.generatePrivate(spec);
+		} catch (NoSuchAlgorithmException e) {
+			// TODO Auto-generated catch block
+			throw new FileItException(e.getMessage());
+		} catch (InvalidKeySpecException e) {
+			// TODO Auto-generated catch block
+			throw new FileItException(e.getMessage());
+		}
 	}
 
-	private Storage getStorage() throws Exception {
+	private Storage getStorage() throws FileItException {
 
 		if (storage == null) {
 			PrivateKey oPrivateKey = getPrivateKey();
@@ -72,7 +86,7 @@ public class CloudStorageConfig {
 		return storage;
 	}
 
-	private Properties getProperties() throws Exception {
+	private Properties getProperties() throws FileItException {
 
 		if (properties == null) {
 			properties = new Properties();
@@ -82,7 +96,12 @@ public class CloudStorageConfig {
 			} catch (IOException e) {
 				throw new RuntimeException("cloudstorage.properties must be present in classpath", e);
 			} finally {
-				stream.close();
+				try {
+					stream.close();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					throw new FileItException(e.getMessage());
+				}
 			}
 		}
 		return properties;
@@ -99,7 +118,7 @@ public class CloudStorageConfig {
 	 * @throws Exception
 	 */
 	public void uploadFile(String bucketName, String filePath, InputStream oInputStream, String contentType)
-			throws Exception {
+			throws FileItException {
 
 		Storage storage = getStorage();
 		try {
@@ -109,8 +128,16 @@ public class CloudStorageConfig {
 			Storage.Objects.Insert insert = storage.objects().insert(bucketName, object, content);
 			insert.setName(filePath);
 			insert.execute();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			throw new FileItException(e.getMessage());
 		} finally {
-			oInputStream.close();
+			try {
+				oInputStream.close();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				throw new FileItException(e.getMessage());
+			}
 		}
 	}
 
@@ -133,17 +160,26 @@ public class CloudStorageConfig {
 		}
 	}
 
-	public InputStream getFile(String bucketName, String filePath) throws Exception {
+	public InputStream getFile(String bucketName, String filePath) throws FileItException {
 		setExpiryTimeInEpoch();
+		InputStream getOutput = null;
 		String stringToSign = getSignInput(filePath);
 		PrivateKey pk = getPrivateKey();
 		String signedString = getSignedString(stringToSign, pk);
-		signedString = URLEncoder.encode(signedString, "UTF-8");
-		String signedUrl = getSignedUrl(signedString, filePath);
-		InputStream getOutput = sendGet(signedUrl);
+		try {
+			signedString = URLEncoder.encode(signedString, "UTF-8");
+			String signedUrl = getSignedUrl(signedString, filePath);
+			getOutput = sendGet(signedUrl);
+		} catch (UnsupportedEncodingException e) {
+			// TODO Auto-generated catch block
+			throw new FileItException(e.getMessage());
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			throw new FileItException(e.getMessage());
+		}
 		return getOutput;
 	}
-	
+
 	public String getSignedString(String bucketName, String filePath) throws Exception {
 		setExpiryTimeForImage();
 		String stringToSign = getSignInput(filePath);
@@ -288,30 +324,46 @@ public class CloudStorageConfig {
 		long expiredTimeInSeconds = (now + 120 * 1000L) / 1000;
 		expiryTime = expiredTimeInSeconds + "";
 	}
-	
+
 	private void setExpiryTimeForImage() {
 		long now = System.currentTimeMillis();
 		long expiredTimeInSeconds = (now + 20000 * 1000L) / 1000;
 		expiryTime = expiredTimeInSeconds + "";
 	}
 
-	private String getSignedUrl(String signedString, String objectPath) throws Exception {
+	private String getSignedUrl(String signedString, String objectPath) throws FileItException {
 		String signedUrl = getProperties().getProperty(API_URL) + '/' + getProperties().getProperty(BUCKET_NAME) + '/'
 				+ objectPath + "?GoogleAccessId=" + getProperties().getProperty(ACCOUNT_ID_PROPERTY) + "&Expires="
 				+ expiryTime + "&Signature=" + signedString;
 		return signedUrl;
 	}
 
-	private String getSignInput(String objectPath) throws Exception {
+	private String getSignInput(String objectPath) throws FileItException {
 		return "GET" + "\n" + "" + "\n" + "" + "\n" + expiryTime + "\n" + '/' + getProperties().getProperty(BUCKET_NAME)
 				+ '/' + objectPath;
 	}
 
-	private String getSignedString(String input, PrivateKey pk) throws Exception {
-		Signature privateSignature = Signature.getInstance("SHA256withRSA");
-		privateSignature.initSign(pk);
-		privateSignature.update(input.getBytes("UTF-8"));
-		byte[] s = privateSignature.sign();
+	private String getSignedString(String input, PrivateKey pk) throws FileItException {
+		Signature privateSignature;
+		byte[] s = null;
+		try {
+			privateSignature = Signature.getInstance("SHA256withRSA");
+			privateSignature.initSign(pk);
+			privateSignature.update(input.getBytes("UTF-8"));
+			s = privateSignature.sign();
+		} catch (NoSuchAlgorithmException e) {
+			// TODO Auto-generated catch block
+			throw new FileItException(e.getMessage());
+		} catch (InvalidKeyException e) {
+			// TODO Auto-generated catch block
+			throw new FileItException(e.getMessage());
+		} catch (SignatureException e) {
+			// TODO Auto-generated catch block
+			throw new FileItException(e.getMessage());
+		} catch (UnsupportedEncodingException e) {
+			// TODO Auto-generated catch block
+			throw new FileItException(e.getMessage());
+		}
 		return Base64.getEncoder().encodeToString(s);
 	}
 }

@@ -28,7 +28,7 @@ public class FileUtil {
 		CloudStorageConfig oCloudStorageConfig = new CloudStorageConfig();
 		try {
 			oCloudStorageConfig.getFile(CloudPropertiesReader.getInstance().getString("bucket.name"), "test.JSON");
-		} catch (Exception e) {
+		} catch (FileItException e) {
 			JSONArray jsonArray = new JSONArray();
 			JSONObject parentObj = new JSONObject();
 			parentObj.put("BookList", jsonArray);
