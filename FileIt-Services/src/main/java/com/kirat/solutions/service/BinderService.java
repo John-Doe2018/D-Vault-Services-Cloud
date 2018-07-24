@@ -28,6 +28,7 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
+import org.apache.commons.io.FilenameUtils;
 import org.apache.cxf.jaxrs.ext.multipart.Attachment;
 import org.apache.cxf.jaxrs.ext.multipart.MultipartBody;
 import org.json.simple.JSONArray;
@@ -94,12 +95,23 @@ public class BinderService {
 	@Produces(MediaType.APPLICATION_JSON)
 	@Consumes(MediaType.APPLICATION_JSON)
 	public List<String> getFile(GetImageRequest oGetImageRequest) throws Exception {
-
+		InputStream fis;
 		CloudStorageConfig oCloudStorageConfig = new CloudStorageConfig();
+		String wordToSearchFor1 = oGetImageRequest.getBookName() + '/' + "Contents/";
 		List<String> oImages = new ArrayList<>();
 		List<String> oList = oCloudStorageConfig
 				.listBucket(CloudPropertiesReader.getInstance().getString("bucket.name"));
-		String wordToSearchFor = oGetImageRequest.getBookName() + '/' + "Images/";
+		for (String word1 : oList) {
+			if (word1.contains(wordToSearchFor1)) {
+				String extension = FilenameUtils.getExtension(word1);
+				String fileName = FilenameUtils.getName(word1);
+				fis = oCloudStorageConfig.getFile(CloudPropertiesReader.getInstance().getString("bucket.name"), word1);
+				ContentProcessor oContentProcessor = new ContentProcessor();
+				oContentProcessor.processContentImage(oGetImageRequest.getBookName(), fis,
+						oGetImageRequest.getBookName() + "/Images/", extension, fileName);
+			}
+		}
+		String wordToSearchFor = oGetImageRequest.getBookName() + "/Images/";
 		List<Integer> oList2 = new ArrayList<>();
 		for (String word : oList) {
 			if (word.contains(wordToSearchFor)) {

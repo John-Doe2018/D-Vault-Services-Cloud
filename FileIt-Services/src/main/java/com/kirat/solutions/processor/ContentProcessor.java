@@ -64,7 +64,7 @@ public class ContentProcessor {
 		}
 		JSONArray oJsonArray = new JSONArray();
 		try {
-			if (type.equalsIgnoreCase("application/vnd.openxmlformats-officedocument.wordprocessingml.document")) {
+			if (type.equalsIgnoreCase("docx")) {
 				XWPFDocument document1 = new XWPFDocument(OPCPackage.open(inputFile));
 				PdfOptions options = PdfOptions.create();
 				OutputStream out = new FileOutputStream(new File("./test.pdf"));
@@ -87,8 +87,7 @@ public class ContentProcessor {
 					os.close();
 				}
 				oJsonObject.put("Success", "File Uploaded Successfully");
-			} else if (type
-					.equalsIgnoreCase("application/vnd.openxmlformats-officedocument.presentationml.presentation")) {
+			} else if (type.equalsIgnoreCase("pptx")) {
 				XMLSlideShow ppt = new XMLSlideShow(inputFile);
 				XSLFSlide[] slides = ppt.getSlides();
 				Dimension pgsize = ppt.getPageSize();
