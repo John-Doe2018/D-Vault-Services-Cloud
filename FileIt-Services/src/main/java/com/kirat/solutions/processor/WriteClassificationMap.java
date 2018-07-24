@@ -30,7 +30,7 @@ public class WriteClassificationMap {
 			bookClassification = checkifClassPresent(classification,bookList);
 			if(bookClassification.isClassification()) {
 				InputStream is = new ByteArrayInputStream(bookClassification.getJsonArray().toJSONString().getBytes());
-				oCloudStorageConfig.uploadFile("1dvaultdata1", "ClassificationMap.JSON", is, "application/json");
+				oCloudStorageConfig.uploadFile(CloudPropertiesReader.getInstance().getString("bucket.name"), "ClassificationMap.JSON", is, "application/json");
 				is.close();
 			}else {
 			}
