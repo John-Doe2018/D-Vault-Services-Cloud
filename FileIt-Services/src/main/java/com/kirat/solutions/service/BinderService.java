@@ -300,7 +300,7 @@ public class BinderService {
 	@POST
 	@Path("classifiedData")
 	public JSONObject getBookClassification() throws Exception {
-		if (FileItContext.get(BinderConstants.CLASSIFIED_BOOK_NAMES) == null || !FileUtil.checkBookClassificationJson()) {
+		if (FileItContext.get(BinderConstants.CLASSIFIED_BOOK_NAMES) == null) {
 			PrepareClassificationMap
 					.createClassifiedMap(FileInfoPropertyReader.getInstance().getString("masterjson.file.path"));
 		}
