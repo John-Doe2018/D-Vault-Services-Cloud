@@ -10,7 +10,6 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
 import org.json.XML;
-import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
@@ -30,21 +29,8 @@ public class BookTreeProcessor {
 		try {
 			documentBuilder = documentFactory.newDocumentBuilder();
 			CloudStorageConfig oCloudStorageConfig = new CloudStorageConfig();
-			InputStream oInputStream = oCloudStorageConfig
-					.getFile(CloudPropertiesReader.getInstance().getString("bucket.name"), "test.JSON");
-			String requiredXmlPath = "";
+			String requiredXmlPath = "files/" + bookName + ".xml";
 			JSONParser parser = new JSONParser();
-			JSONObject array = null;
-			array = (JSONObject) parser.parse(new InputStreamReader(oInputStream));
-			oInputStream.close();
-			JSONArray jsonArray = (JSONArray) array.get("BookList");
-			for (Object obj : jsonArray) {
-				JSONObject book = (JSONObject) obj;
-				if (book.containsKey(bookName)) {
-					JSONObject jsonObject = (JSONObject) book.get(bookName);
-					requiredXmlPath = (String) jsonObject.get("Path");
-				}
-			}
 			BufferedReader br = null;
 			InputStream xmlInputStream = oCloudStorageConfig
 					.getFile(CloudPropertiesReader.getInstance().getString("bucket.name"), requiredXmlPath);
