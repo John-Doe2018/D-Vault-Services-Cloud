@@ -57,12 +57,10 @@ import com.kirat.solutions.processor.BookTreeProcessor;
 import com.kirat.solutions.processor.ContentProcessor;
 import com.kirat.solutions.processor.DeleteBookProcessor;
 import com.kirat.solutions.processor.LookupBookProcessor;
-import com.kirat.solutions.processor.PrepareClassificationMap;
 import com.kirat.solutions.processor.TransformationProcessor;
 import com.kirat.solutions.processor.UpdateMasterJson;
 import com.kirat.solutions.util.CloudPropertiesReader;
 import com.kirat.solutions.util.CloudStorageConfig;
-import com.kirat.solutions.util.FileInfoPropertyReader;
 import com.kirat.solutions.util.FileItException;
 import com.kirat.solutions.util.FileUtil;
 
@@ -312,10 +310,10 @@ public class BinderService {
 	@POST
 	@Path("classifiedData")
 	public JSONObject getBookClassification() throws Exception {
-		if (FileItContext.get(BinderConstants.CLASSIFIED_BOOK_NAMES) == null) {
+		/*if (FileItContext.get(BinderConstants.CLASSIFIED_BOOK_NAMES) == null) {
 			PrepareClassificationMap
 					.createClassifiedMap(FileInfoPropertyReader.getInstance().getString("masterjson.file.path"));
-		}
+		}*/
 		return (JSONObject) FileItContext.get(BinderConstants.CLASSIFIED_BOOK_NAMES);
 
 	}

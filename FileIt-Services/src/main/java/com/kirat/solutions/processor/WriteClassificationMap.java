@@ -19,53 +19,57 @@ import com.kirat.solutions.util.CloudStorageConfig;
 
 public class WriteClassificationMap {
 
-	public static void writeClassificationMap(Map<String,List<String>> classifiedBook) throws Exception {
+	public static void writeClassificationMap(Map<String, List<String>> classifiedBook) throws Exception {
 		String classification = null;
 		List<String> bookList = new ArrayList<String>();
 		BookClassification bookClassification = new BookClassification();
 		CloudStorageConfig oCloudStorageConfig = new CloudStorageConfig();
-		for(Map.Entry<String, List<String>> entry : classifiedBook.entrySet()) {
+		for (Map.Entry<String, List<String>> entry : classifiedBook.entrySet()) {
 			classification = entry.getKey();
 			bookList = classifiedBook.get(classification);
-			bookClassification = checkifClassPresent(classification,bookList);
-			if(bookClassification.isClassification()) {
+			bookClassification = checkifClassPresent(classification, bookList);
+			if (bookClassification.isClassification()) {
 				InputStream is = new ByteArrayInputStream(bookClassification.getJsonArray().toJSONString().getBytes());
-				oCloudStorageConfig.uploadFile(CloudPropertiesReader.getInstance().getString("bucket.name"), "ClassificationMap.JSON", is, "application/json");
+				oCloudStorageConfig.uploadFile(CloudPropertiesReader.getInstance().getString("bucket.name"),
+						"ClassificationMap.JSON", is, "application/json");
+				FileItContext forBookClassifcation = new FileItContext();
+				forBookClassifcation.remove(BinderConstants.CLASSIFIED_BOOK_NAMES);
+				forBookClassifcation.add(BinderConstants.CLASSIFIED_BOOK_NAMES, bookClassification.getJsonArray());
 				is.close();
-			}else {
+			} else {
 			}
 		}
-		FileItContext forBookClassifcation = new FileItContext();
-		forBookClassifcation.add(BinderConstants.CLASSIFIED_BOOK_NAMES, bookClassification.getJsonArray());
 	}
 
-	public static BookClassification checkifClassPresent(String classificationName,List<String> bookList) throws Exception {
+	public static BookClassification checkifClassPresent(String classificationName, List<String> bookList)
+			throws Exception {
 		CloudStorageConfig oCloudStorageConfig = new CloudStorageConfig();
 		InputStream oInputStream;
 		BookClassification bookClassification = new BookClassification();
 		try {
 			JSONParser parser = new JSONParser();
-			oInputStream = oCloudStorageConfig
-					.getFile(CloudPropertiesReader.getInstance().getString("bucket.name"), "ClassificationMap.JSON");
-			if(null != oInputStream) {
+			oInputStream = oCloudStorageConfig.getFile(CloudPropertiesReader.getInstance().getString("bucket.name"),
+					"ClassificationMap.JSON");
+			if (null != oInputStream) {
 				bookClassification.setClassification(true);
 				JSONObject array = (JSONObject) parser.parse(new InputStreamReader(oInputStream));
 				JSONArray jsonArray = (JSONArray) array.get(classificationName);
-				//jsonArray.writeJSONString(out);
-				//System.out.println(jsonArray);
-				if(null != jsonArray ) {
-					for(String bookName : bookList) {
-						//Check for same book name
-						/*if(jsonArray.contains(bookName)) {
-					}*/
+				// jsonArray.writeJSONString(out);
+				// System.out.println(jsonArray);
+				if (null != jsonArray) {
+					for (String bookName : bookList) {
+						// Check for same book name
+						/*
+						 * if(jsonArray.contains(bookName)) { }
+						 */
 						jsonArray.add(bookName);
 					}
 					array.put(classificationName, jsonArray);
-				}else {
+				} else {
 					array.put(classificationName, bookList);
 				}
 				bookClassification.setJsonArray(array);
-			}else {
+			} else {
 				bookClassification.setClassification(false);
 			}
 

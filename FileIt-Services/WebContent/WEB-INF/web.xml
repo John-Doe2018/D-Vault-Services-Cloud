@@ -26,7 +26,10 @@
 		<servlet-name>cxf</servlet-name>
 		<url-pattern>/rest/*</url-pattern>
 	</servlet-mapping>
-	<!-- <servlet> <servlet-name>StartupServlet</servlet-name> <servlet-class>com.tcs.dummyproject.startup.Startup</servlet-class> 
-		<load-on-startup>2</load-on-startup> </servlet> -->
+	<servlet>
+		<servlet-name>StartupServlet</servlet-name>
+		<servlet-class>com.kirat.solutions.startup.StartupServlet</servlet-class>
+		<load-on-startup>2</load-on-startup>
+	</servlet>
 
 </web-app>
