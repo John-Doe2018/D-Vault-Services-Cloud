@@ -20,9 +20,9 @@ public class LookupBookProcessor {
 	public static JSONObject lookupBookbyName(String bookName) throws Exception {
 		CloudStorageConfig oCloudStorageConfig = new CloudStorageConfig();
 		InputStream oInputStream = oCloudStorageConfig
-				.getFile(CloudPropertiesReader.getInstance().getString("bucket.name"), "test.JSON");
+				.getFile(CloudPropertiesReader.getInstance().getString("bucket.name"), "BookList.JSON");
 		JSONParser parser = new JSONParser();
-		JSONObject book = null;
+		String book = null;
 		boolean bookNameFound = false;
 		JSONObject array = null;
 		try {
@@ -36,20 +36,21 @@ public class LookupBookProcessor {
 			e.printStackTrace();
 			throw new FileItException(e.getMessage());
 		}
-		JSONArray jsonArray = (JSONArray) array.get("BookList");
+		JSONArray jsonArray = (JSONArray) array.get("Books");
 		for (Object obj : jsonArray) {
-			book = (JSONObject) obj;
-			if (book.containsKey(bookName)) {
+			book = String.valueOf(obj);
+			if (jsonArray.contains(obj)) {
 				bookNameFound = true;
 				break;
 			}
-
 		}
 		if (!bookNameFound) {
 			throw new FileItException(ErrorCodeConstants.ERR_CODE_0003,
 					ErrorMessageReader.getInstance().getString(ErrorCodeConstants.ERR_CODE_0003));
 		}
-		return book;
+		JSONObject object = new JSONObject();
+		object.put("BookName", book);
+		return object;
 	}
 
 }

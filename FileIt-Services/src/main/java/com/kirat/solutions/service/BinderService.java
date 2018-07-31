@@ -11,7 +11,6 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
@@ -70,8 +69,11 @@ public class BinderService {
 	@Path("create")
 	public CreateBinderResponse createBinder(CreateBinderRequest createBinderRequest) throws FileItException {
 		CreateBinderResponse createBinderResponse = new CreateBinderResponse();
+		JSONArray bookArray = new JSONArray();
 		try {
 			FileUtil.checkTestJson();
+			bookArray = FileUtil.checkBookList();
+
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -80,11 +82,18 @@ public class BinderService {
 		TransformationProcessor transformationProcessor = new TransformationProcessor();
 		BinderList listOfBinderObj = transformationProcessor.createBinderList(htmlContent);
 		transformationProcessor.processHtmlToBinderXml(listOfBinderObj);
-		// append in MasterJson
 		UpdateMasterJson updateMasterJson = new UpdateMasterJson();
-		String bookName = updateMasterJson.prepareMasterJson(listOfBinderObj);
-		// Prepare the Content Structure of the book with image
+		updateMasterJson.prepareMasterJson(listOfBinderObj);
 		createBinderResponse.setSuccessMsg("Binder Successfully Created.");
+		FileItContext forBookClassifcation = new FileItContext();
+		bookArray.add(listOfBinderObj.getName());
+		forBookClassifcation.add(BinderConstants.CLASSIFIED_BOOK_LIST, bookArray);
+		JSONObject parentObj = new JSONObject();
+		parentObj.put("Books", bookArray);
+		CloudStorageConfig oCloudStorageConfig = new CloudStorageConfig();
+		InputStream is = new ByteArrayInputStream(parentObj.toJSONString().getBytes());
+		oCloudStorageConfig.uploadFile(CloudPropertiesReader.getInstance().getString("bucket.name"), "BookList.JSON",
+				is, "application/json");
 		return createBinderResponse;
 	}
 
@@ -166,13 +175,8 @@ public class BinderService {
 			org.apache.commons.io.IOUtils.copy(fileStream, baos);
 			byte[] bytes = baos.toByteArray();
 			ContentProcessor contentProcessor = ContentProcessor.getInstance();
-			// Read it from ByteArrayOutput Stream
 			ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
 			oJsonObject = contentProcessor.processContent(bookName, bais, path, type, fileName);
-			/*
-			 * ByteArrayInputStream bais1 = new ByteArrayInputStream(bytes); oJsonObject =
-			 * contentProcessor.processContentImage(bookName, bais1, path, type, fileName);
-			 */
 		} catch (Exception ex) {
 			return Response.status(600).entity(ex.getMessage()).build();
 		}
@@ -224,22 +228,22 @@ public class BinderService {
 	@POST
 	@Path("advancedSearch")
 	public JSONArray advancedSearch() throws Exception {
-		CloudStorageConfig oCloudStorageConfig = new CloudStorageConfig();
-		InputStream oInputStream = oCloudStorageConfig
-				.getFile(CloudPropertiesReader.getInstance().getString("bucket.name"), "test.JSON");
-		JSONParser parser = new JSONParser();
 		JSONObject array = null;
-		array = (JSONObject) parser.parse(new InputStreamReader(oInputStream));
-		JSONArray jsonArray = (JSONArray) array.get("BookList");
-		JSONArray oArray = new JSONArray();
-		for (Object obj : jsonArray) {
-			JSONObject book = (JSONObject) obj;
-			Set<String> keys = book.keySet();
-			for (String s : keys) {
-				oArray.add(s);
-			}
+		JSONArray jsonArray = null;
+		if (FileItContext.get(BinderConstants.CLASSIFIED_BOOK_LIST) != null) {
+			jsonArray = (JSONArray) FileItContext.get(BinderConstants.CLASSIFIED_BOOK_LIST);
+		} else {
+			CloudStorageConfig oCloudStorageConfig = new CloudStorageConfig();
+			InputStream oInputStream = oCloudStorageConfig
+					.getFile(CloudPropertiesReader.getInstance().getString("bucket.name"), "BookList.JSON");
+			JSONParser parser = new JSONParser();
+			array = (JSONObject) parser.parse(new InputStreamReader(oInputStream));
+			jsonArray = (JSONArray) array.get("Books");
+			FileItContext forBookClassifcation = new FileItContext();
+			forBookClassifcation.add(BinderConstants.CLASSIFIED_BOOK_LIST, jsonArray);
 		}
-		return oArray;
+
+		return jsonArray;
 
 	}
 
@@ -310,10 +314,6 @@ public class BinderService {
 	@POST
 	@Path("classifiedData")
 	public JSONObject getBookClassification() throws Exception {
-		/*if (FileItContext.get(BinderConstants.CLASSIFIED_BOOK_NAMES) == null) {
-			PrepareClassificationMap
-					.createClassifiedMap(FileInfoPropertyReader.getInstance().getString("masterjson.file.path"));
-		}*/
 		return (JSONObject) FileItContext.get(BinderConstants.CLASSIFIED_BOOK_NAMES);
 
 	}
