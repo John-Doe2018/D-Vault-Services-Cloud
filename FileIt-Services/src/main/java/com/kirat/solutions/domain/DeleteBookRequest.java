@@ -3,6 +3,16 @@ package com.kirat.solutions.domain;
 public class DeleteBookRequest {
 	String bookName;
 
+	String classificationName;
+
+	public String getClassificationName() {
+		return classificationName;
+	}
+
+	public void setClassificationName(String classificationName) {
+		this.classificationName = classificationName;
+	}
+
 	public String getBookName() {
 		return bookName;
 	}

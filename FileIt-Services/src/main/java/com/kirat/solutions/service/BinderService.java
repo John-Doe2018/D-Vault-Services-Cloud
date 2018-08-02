@@ -188,8 +188,9 @@ public class BinderService {
 	@Produces("application/json")
 	public JSONObject deleteBinder(DeleteBookRequest deleteBookRequest) throws Exception {
 		String bookName = deleteBookRequest.getBookName();
+		String classificationName = deleteBookRequest.getClassificationName();
 		DeleteBookProcessor deleteBookProcessor = new DeleteBookProcessor();
-		JSONObject succssMsg = deleteBookProcessor.deleteBookProcessor(bookName);
+		JSONObject succssMsg = deleteBookProcessor.deleteBookProcessor(bookName, classificationName);
 		return succssMsg;
 	}
 
