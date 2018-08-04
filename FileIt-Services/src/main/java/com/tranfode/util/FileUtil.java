@@ -90,7 +90,7 @@ public class FileUtil {
 		} catch (Exception e) {
 			JSONArray jsonArray = new JSONArray();
 			JSONObject parentObj = new JSONObject();
-			parentObj.put("BlankArray", jsonArray);
+			parentObj.put("classificationList", jsonArray);
 			InputStream is = new ByteArrayInputStream(parentObj.toJSONString().getBytes());
 			oCloudStorageConfig.uploadFile(CloudPropertiesReader.getInstance().getString("bucket.name"),
 					"ClassificationList.JSON", is, "application/json");

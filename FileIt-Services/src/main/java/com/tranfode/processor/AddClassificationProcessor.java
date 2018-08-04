@@ -1,5 +1,6 @@
 package com.tranfode.processor;
 
+import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
@@ -42,17 +43,41 @@ public class AddClassificationProcessor {
 
 			JSONObject array = (JSONObject) parser.parse(new InputStreamReader(inputStream));
 			JSONArray jsonArray = (JSONArray) array.get("classificationList");
-			if (null != jsonArray) {
-				jsonArray.add(classificationName);
-			} else {
-				array.put("classificationList", classifcations);
-			}
+			jsonArray.add(classificationName);
+			array.put("classificationList", jsonArray);
+			InputStream is = new ByteArrayInputStream(array.toJSONString().getBytes());
+			oCloudStorageConfig.uploadFile(CloudPropertiesReader.getInstance().getString("bucket.name"),
+					"ClassificationList.JSON", is, "application/json");
 		} catch (Exception e) {
 			e.printStackTrace();
 
 		}
 
-		return null;
+		AddClassificationResponse oAddClassificationResponse = new AddClassificationResponse();
+		oAddClassificationResponse.setSuccessMsg("Classification Created Successfully");
+		return oAddClassificationResponse;
+
+	}
+
+	@SuppressWarnings("unchecked")
+	public List<String> getClassifications() throws FileItException {
+		List<String> classifcations = new ArrayList<String>();
+		CloudStorageConfig oCloudStorageConfig = new CloudStorageConfig();
+		JSONParser parser = new JSONParser();
+		InputStream inputStream;
+		try {
+			inputStream = oCloudStorageConfig.getFile(CloudPropertiesReader.getInstance().getString("bucket.name"),
+					"ClassificationList.JSON");
+
+			JSONObject array = (JSONObject) parser.parse(new InputStreamReader(inputStream));
+			classifcations = (List<String>) array.get("classificationList");
+			if (null == classifcations) {
+				throw new FileItException("No Data Found.");
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return classifcations;
 
 	}
 
