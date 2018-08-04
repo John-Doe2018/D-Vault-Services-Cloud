@@ -12,6 +12,7 @@ import com.tranfode.logger.util.LoggerConstant;
 
 /**
  * The Class FILEITLoggerSLF4J is SLF4J implementation class.
+ * 
  * @author BIKASH
  * @version 1.0
  */
@@ -41,14 +42,11 @@ public final class FILEITLoggerSLF4J implements FILEITLogger {
 	private Logger logger;
 
 	static {
-		URL urlObj = FILEITLoggerSLF4J.class.getClassLoader().getResource(
-				LoggerConstant.LOG4J_CONFIG_FILE);
+		URL urlObj = FILEITLoggerSLF4J.class.getClassLoader().getResource(LoggerConstant.LOG4J_CONFIG_FILE);
 		if (null != urlObj) {
 			DOMConfigurator.configure(urlObj);
 		}
 	}
-
-
 
 	/**
 	 * Debug.
@@ -91,8 +89,8 @@ public final class FILEITLoggerSLF4J implements FILEITLogger {
 		if (msg instanceof Exception) {
 			Exception e = (Exception) msg;
 
-			logger.error("{}{}{}{}", getFormattedClassName(), msg,
-					getFormattedMessage((Exception) msg), e.getStackTrace());
+			logger.error("{}{}{}{}", getFormattedClassName(), msg, getFormattedMessage((Exception) msg),
+					e.getStackTrace());
 
 		} else {
 			logger.error("{}{}", getFormattedClassName(), msg);
@@ -109,8 +107,7 @@ public final class FILEITLoggerSLF4J implements FILEITLogger {
 	 *            the e
 	 */
 	public void error(final String strMsg, final Exception e) {
-		logger.error("{}{}{}", getFormattedClassName(), strMsg,
-				getFormattedMessage(e));
+		logger.error("{}{}{}", getFormattedClassName(), strMsg, getFormattedMessage(e));
 	}
 
 	/**
@@ -132,8 +129,7 @@ public final class FILEITLoggerSLF4J implements FILEITLogger {
 	 *            the e
 	 */
 	public void fatal(final String strMsg, final Exception e) {
-		logger.error("{}{}{}", getFormattedClassName(), strMsg,
-				getFormattedMessage(e));
+		logger.error("{}{}{}", getFormattedClassName(), strMsg, getFormattedMessage(e));
 	}
 
 	/**
@@ -145,8 +141,7 @@ public final class FILEITLoggerSLF4J implements FILEITLogger {
 	 *            the message
 	 */
 	public void traceStart(String methodName, String message) {
-		logger.debug("Trace Start : {}{}{}", getFormattedClassName(),
-				methodName, message);
+		logger.debug("Trace Start : {}{}{}", getFormattedClassName(), methodName, message);
 	}
 
 	/**
@@ -158,8 +153,7 @@ public final class FILEITLoggerSLF4J implements FILEITLogger {
 	 *            the message
 	 */
 	public void traceEnd(String methodName, String message) {
-		logger.debug("Trace End : {}{}{}", getFormattedClassName(), methodName,
-				message);
+		logger.debug("Trace End : {}{}{}", getFormattedClassName(), methodName, message);
 
 	}
 
@@ -172,8 +166,7 @@ public final class FILEITLoggerSLF4J implements FILEITLogger {
 	 *            the message
 	 */
 	public void eventTrace(String methodName, String message) {
-		logger.debug("Event Trace : {}{}{}", getFormattedClassName(),
-				methodName, message);
+		logger.debug("Event Trace : {}{}{}", getFormattedClassName(), methodName, message);
 
 	}
 
@@ -200,15 +193,14 @@ public final class FILEITLoggerSLF4J implements FILEITLogger {
 	public static String getFormattedClassName(Class<?> cl) {
 		String className = cl.getCanonicalName();
 		if (className.length() < LoggerConstant.MAX_LENGTH) {
-			StringBuffer padding =new StringBuffer("%1$-").append(LoggerConstant.MAX_LENGTH).append('s');
+			StringBuffer padding = new StringBuffer("%1$-").append(LoggerConstant.MAX_LENGTH).append('s');
 			className = padRight(padding.toString(), className);
 		}
 		return className + LoggerConstant.COLON_SEPARATOR;
 	}
 
 	/**
-	 * returns formatted class name from the logger object for which its
-	 * logging.
+	 * returns formatted class name from the logger object for which its logging.
 	 * 
 	 * @return formatted class name
 	 */
@@ -219,7 +211,7 @@ public final class FILEITLoggerSLF4J implements FILEITLogger {
 		if (null != cl) {
 			String className = cl.getCanonicalName();
 			if (className.length() < LoggerConstant.MAX_LENGTH) {
-				StringBuffer padding =new StringBuffer("%1$-").append(LoggerConstant.MAX_LENGTH).append('s');
+				StringBuffer padding = new StringBuffer("%1$-").append(LoggerConstant.MAX_LENGTH).append('s');
 				className = padRight(padding.toString(), className);
 			}
 			formattedClName = className + LoggerConstant.COLON_SEPARATOR;
@@ -246,31 +238,24 @@ public final class FILEITLoggerSLF4J implements FILEITLogger {
 			// pbFlag = true;
 			if (pbFlag) {
 				sbExceptionMsg.append("\r\n");
-				sbExceptionMsg
-						.append("#####################################################################################################\r\n");
+				sbExceptionMsg.append(
+						"#####################################################################################################\r\n");
 				sbExceptionMsg.append("POS Code Related Exceptions \r\n");
 				sbExceptionMsg.append("Exception Occured \r\n");
-				sbExceptionMsg.append("Exception Cause   --> "
-						+ excepObj.toString() + "\r\n");
-				sbExceptionMsg.append("File   Name\t\t\t :	"
-						+ st[i].getFileName() + "\r\n");
-				sbExceptionMsg.append("Class  Name\t\t\t :	"
-						+ st[i].getClassName() + "\r\n");
-				sbExceptionMsg.append("Method Name\t\t\t :	"
-						+ st[i].getMethodName() + "\r\n");
-				sbExceptionMsg.append("Line   No  \t\t\t :	"
-						+ st[i].getLineNumber() + "\r\n");
+				sbExceptionMsg.append("Exception Cause   --> " + excepObj.toString() + "\r\n");
+				sbExceptionMsg.append("File   Name\t\t\t :	" + st[i].getFileName() + "\r\n");
+				sbExceptionMsg.append("Class  Name\t\t\t :	" + st[i].getClassName() + "\r\n");
+				sbExceptionMsg.append("Method Name\t\t\t :	" + st[i].getMethodName() + "\r\n");
+				sbExceptionMsg.append("Line   No  \t\t\t :	" + st[i].getLineNumber() + "\r\n");
 
 				sbExceptionMsg.append("\r\n");
-				sbExceptionMsg
-						.append("#####################################################################################################\r\n");
+				sbExceptionMsg.append(
+						"#####################################################################################################\r\n");
 				break;
 			} else {
 				// Suppose is it is a FileSecurity Exception this will help
 				sbExceptionMsg.append("\r\n");
-				sbExceptionMsg.append("Exception Cause  --> "
-						+ st[i].getClassName() + "(" + excepObj.toString()
-						+ ")");
+				sbExceptionMsg.append("Exception Cause  --> " + st[i].getClassName() + "(" + excepObj.toString() + ")");
 			}
 		}
 
@@ -286,22 +271,17 @@ public final class FILEITLoggerSLF4J implements FILEITLogger {
 				pbApplCauseFlag = check(stCauseElement[count]);
 				if (pbApplCauseFlag) {
 					sbCauseBuffer.append("\r\n");
-					sbCauseBuffer
-							.append("#####################################################################################################\r\n");
+					sbCauseBuffer.append(
+							"#####################################################################################################\r\n");
 					sbCauseBuffer.append("Caused Exception  \r\n");
-					sbCauseBuffer.append("Exception Cause   --> "
-							+ throwObj.toString() + "\r\n");
-					sbCauseBuffer.append("File   Name\t\t\t :  "
-							+ stCauseElement[count].getFileName() + "\r\n");
-					sbCauseBuffer.append("Class  Name\t\t\t :  "
-							+ stCauseElement[count].getClassName() + "\r\n");
-					sbCauseBuffer.append("Method Name\t\t\t :  "
-							+ stCauseElement[count].getMethodName() + "\r\n");
-					sbCauseBuffer.append("Line   No  \t\t\t :  "
-							+ stCauseElement[count].getLineNumber() + "\r\n");
+					sbCauseBuffer.append("Exception Cause   --> " + throwObj.toString() + "\r\n");
+					sbCauseBuffer.append("File   Name\t\t\t :  " + stCauseElement[count].getFileName() + "\r\n");
+					sbCauseBuffer.append("Class  Name\t\t\t :  " + stCauseElement[count].getClassName() + "\r\n");
+					sbCauseBuffer.append("Method Name\t\t\t :  " + stCauseElement[count].getMethodName() + "\r\n");
+					sbCauseBuffer.append("Line   No  \t\t\t :  " + stCauseElement[count].getLineNumber() + "\r\n");
 					sbCauseBuffer.append("\r\n");
-					sbCauseBuffer
-							.append("#####################################################################################################\r\n");
+					sbCauseBuffer.append(
+							"#####################################################################################################\r\n");
 					break;
 				}
 			}
@@ -321,9 +301,8 @@ public final class FILEITLoggerSLF4J implements FILEITLogger {
 	 * @return boolean value
 	 */
 	private static boolean check(final StackTraceElement stackTraceObj) {
-		return (stackTraceObj.getClassName().indexOf("com.kirat") != DELIM
-				|| stackTraceObj.getClassName().indexOf(
-						"_jasper._html_0002djsp") != DELIM);
+		return (stackTraceObj.getClassName().indexOf("com.tranfode") != DELIM
+				|| stackTraceObj.getClassName().indexOf("_jasper._html_0002djsp") != DELIM);
 	}
 
 }
