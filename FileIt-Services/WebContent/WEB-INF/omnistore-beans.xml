@@ -15,5 +15,5 @@
 	<import resource="binder-beans.xml"></import>
 	<import resource="authentication-bean.xml"></import>
 	<bean id="jaxbJsonProvider" class="org.codehaus.jackson.jaxrs.JacksonJaxbJsonProvider"/>
-	<bean id="exceptionProvider" class="com.kirat.solutions.util.ServiceExceptionMapper"/>
+	<bean id="exceptionProvider" class="com.tranfode.util.ServiceExceptionMapper"/>
 </beans>

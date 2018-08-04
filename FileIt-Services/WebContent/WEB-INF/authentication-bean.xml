@@ -11,7 +11,7 @@
 
 
 	<bean id="loginSvc"
-		class="com.kirat.solutions.loginService.LoginAuthenticationService">
+		class="com.tranfode.loginService.LoginAuthenticationService">
 	</bean>
 	<jaxrs:server id="LoginAuthenticationService" address="/auth">
 		<jaxrs:serviceBeans>

@@ -18,9 +18,9 @@ import org.codehaus.jackson.map.ObjectMapper;
 import org.w3c.dom.Attr;
 import org.w3c.dom.Element;
 
-import com.kirat.solutions.Constants.BinderConstants;
-import com.kirat.solutions.domain.BinderList;
-import com.kirat.solutions.domain.Children;
+import com.tranfode.Constants.BinderConstants;
+import com.tranfode.domain.BinderList;
+import com.tranfode.domain.Children;
 
 
 public class AllTestMethods {

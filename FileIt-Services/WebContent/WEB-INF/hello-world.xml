@@ -11,7 +11,7 @@
 
 
 	<bean id="helloWorldSvc"
-		class="com.kirat.solutions.webservice.helloWorldService">
+		class="com.tranfode.webservice.helloWorldService">
 	</bean>
 			
 	<jaxrs:server id="HelloWorldserverService" address="/helloworld">
