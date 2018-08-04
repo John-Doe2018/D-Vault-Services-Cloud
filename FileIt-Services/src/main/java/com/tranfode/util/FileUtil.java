@@ -80,4 +80,22 @@ public class FileUtil {
 		return jsonArray;
 
 	}
+
+	public static boolean checkClassificationListJson() throws Exception {
+		CloudStorageConfig oCloudStorageConfig = new CloudStorageConfig();
+		try {
+			oCloudStorageConfig.getFile(CloudPropertiesReader.getInstance().getString("bucket.name"),
+					"ClassificationList.JSON");
+			return true;
+		} catch (Exception e) {
+			JSONArray jsonArray = new JSONArray();
+			JSONObject parentObj = new JSONObject();
+			parentObj.put("BlankArray", jsonArray);
+			InputStream is = new ByteArrayInputStream(parentObj.toJSONString().getBytes());
+			oCloudStorageConfig.uploadFile(CloudPropertiesReader.getInstance().getString("bucket.name"),
+					"ClassificationList.JSON", is, "application/json");
+			return false;
+		}
+
+	}
 }

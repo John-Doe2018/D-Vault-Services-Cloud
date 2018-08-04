@@ -40,6 +40,8 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import com.tranfode.Constants.BinderConstants;
+import com.tranfode.domain.AddClassificationRequest;
+import com.tranfode.domain.AddClassificationResponse;
 import com.tranfode.domain.AddFileRequest;
 import com.tranfode.domain.BinderList;
 import com.tranfode.domain.CreateBinderRequest;
@@ -51,6 +53,7 @@ import com.tranfode.domain.FileItContext;
 import com.tranfode.domain.GetImageRequest;
 import com.tranfode.domain.SearchBookRequest;
 import com.tranfode.domain.SearchBookResponse;
+import com.tranfode.processor.AddClassificationProcessor;
 import com.tranfode.processor.AddFileProcessor;
 import com.tranfode.processor.BookTreeProcessor;
 import com.tranfode.processor.ContentProcessor;
@@ -317,5 +320,21 @@ public class BinderService {
 	public JSONObject getBookClassification() throws Exception {
 		return (JSONObject) FileItContext.get(BinderConstants.CLASSIFIED_BOOK_NAMES);
 
+	}
+
+	@POST
+	@Path("addClassification")
+	public AddClassificationResponse addBookClassification(AddClassificationRequest addClassificationRequest)
+			throws FileItException {
+		AddClassificationResponse addClassificationResponse = new AddClassificationResponse();
+		String className = addClassificationRequest.getClassificationName();
+		try {
+			addClassificationResponse = AddClassificationProcessor.getInstance().addClassification(className,
+					addClassificationResponse);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		return addClassificationResponse;
 	}
 }
