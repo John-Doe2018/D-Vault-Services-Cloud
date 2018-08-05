@@ -28,29 +28,29 @@ public class UpdateMasterJson {
 
 		boolean isSameName = false;
 		String xmlFilePath = FileUtil.createDynamicFilePath(bookObject.getName());
-		// getting the master Json File path
-		// String filePath =
-		// FileInfoPropertyReader.getInstance().getString("masterjson.file.path");
 		// Check any book with same name already present or not
 		CloudStorageConfig oCloudStorageConfig = new CloudStorageConfig();
 		InputStream oInputStream = null;
 		JSONObject array = null;
 		try {
 			oInputStream = oCloudStorageConfig.getFile(CloudPropertiesReader.getInstance().getString("bucket.name"),
-					"test.JSON");
+					"ClassificationMap.JSON");
 			array = (JSONObject) parser.parse(new InputStreamReader(oInputStream));
 		} catch (Exception e1) {
 			// TODO Auto-generated catch block
 			throw new FileItException(e1.getMessage());
 		}
-		JSONArray jsonArray = (JSONArray) array.get("BookList");
+		JSONArray jsonArray = (JSONArray) array.get(bookObject.getClassification());
 		if (oInputStream != null) {
-			isSameName = ReadJsonUtil.CheckBinderWithSameName(jsonArray, bookObject.getName());
+			if (jsonArray != null)
+				isSameName = ReadJsonUtil.CheckBinderWithSameName(jsonArray, bookObject.getName());
 			if (isSameName) {
 				throw new FileItException(ErrorCodeConstants.ERR_CODE_0002,
 						ErrorMessageReader.getInstance().getString(ErrorCodeConstants.ERR_CODE_0002));
 			} else {
 				try {
+					if (jsonArray == null)
+						jsonArray = new JSONArray();
 					// Add the new object to existing
 					obj.put("Name", bookObject.getName());
 					obj.put("Classification", bookObject.getClassification());

@@ -6,6 +6,7 @@ import javax.ws.rs.ext.ExceptionMapper;
 import com.tranfode.Constants.ErrorCodeConstants;
 import com.tranfode.domain.BusinessErrorData;
 
+@SuppressWarnings("rawtypes")
 public class ServiceExceptionMapper implements ExceptionMapper {
 
 	@Override

@@ -1,24 +1,22 @@
 package com.tranfode.util;
 
+import java.util.List;
+
 import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
 
 public class ReadJsonUtil {
 
+	@SuppressWarnings("unchecked")
 	public static boolean CheckBinderWithSameName(JSONArray oJsonArray, String bookName) {
+
 		boolean isSameBookName = false;
 		try {
-
-			for (Object obj : oJsonArray) {
-				JSONObject book = (JSONObject) obj;
-				if (book.containsKey(bookName)) {
-					isSameBookName = true;
-				}
+			List<String> bookarray = oJsonArray;
+			if (bookarray.contains(bookName)) {
+				isSameBookName = true;
 			}
 		} catch (Exception e) {
-			// System.out.println(e.getMessage());
 		}
 		return isSameBookName;
-
 	}
 }
