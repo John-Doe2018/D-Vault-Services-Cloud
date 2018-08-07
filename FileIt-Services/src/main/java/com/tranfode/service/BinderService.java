@@ -146,13 +146,34 @@ public class BinderService {
 	public JSONObject downloadFile(DownloadFileRequest oDownloadFileRequest) throws Exception {
 		CloudStorageConfig oCloudStorageConfig = new CloudStorageConfig();
 		ContentProcessor oContentProcessor = new ContentProcessor();
-		File oFile = new File(this.getClass().getClassLoader().getResource("/").getPath() + "Files.zip");
-		oContentProcessor.getZipFile(oDownloadFileRequest.getBookName(), oFile);
-		InputStream fis = new FileInputStream(oFile);
-		oCloudStorageConfig.uploadFile(CloudPropertiesReader.getInstance().getString("bucket.name"),
-				"/" + oDownloadFileRequest.getBookName() + "/Files.zip", fis, "application/zip");
-		String url = oCloudStorageConfig.getSignedString(CloudPropertiesReader.getInstance().getString("bucket.name"),
-				"/" + oDownloadFileRequest.getBookName() + "/Files.zip");
+		String url = null;
+		if (null != oDownloadFileRequest.getFileName()) {
+			if (oDownloadFileRequest.getFileName().size() > 1) {
+				File oFile = new File(this.getClass().getClassLoader().getResource("/").getPath()
+						+ oDownloadFileRequest.getBookName() + ".zip");
+				oContentProcessor.getMultipleFileDownload(oDownloadFileRequest.getBookName(),
+						oDownloadFileRequest.getFileName(), oFile);
+				InputStream fis = new FileInputStream(oFile);
+				oCloudStorageConfig.uploadFile(CloudPropertiesReader.getInstance().getString("bucket.name"),
+						"/" + oDownloadFileRequest.getBookName() + "/" + oDownloadFileRequest.getBookName() + ".zip",
+						fis, "application/zip");
+				url = oCloudStorageConfig.getSignedString(CloudPropertiesReader.getInstance().getString("bucket.name"),
+						"/" + oDownloadFileRequest.getBookName() + "/" + oDownloadFileRequest.getBookName() + ".zip");
+			} else {
+				url = oCloudStorageConfig.getSignedString(CloudPropertiesReader.getInstance().getString("bucket.name"),
+						oDownloadFileRequest.getBookName() + "/Contents/" + oDownloadFileRequest.getFileName().get(0));
+			}
+		} else {
+			File oFile = new File(this.getClass().getClassLoader().getResource("/").getPath()
+					+ oDownloadFileRequest.getBookName() + ".zip");
+			oContentProcessor.getZipFile(oDownloadFileRequest.getBookName(), oFile);
+			InputStream fis = new FileInputStream(oFile);
+			oCloudStorageConfig.uploadFile(CloudPropertiesReader.getInstance().getString("bucket.name"),
+					"/" + oDownloadFileRequest.getBookName() + "/" + oDownloadFileRequest.getBookName() + ".zip", fis,
+					"application/zip");
+			url = oCloudStorageConfig.getSignedString(CloudPropertiesReader.getInstance().getString("bucket.name"),
+					"/" + oDownloadFileRequest.getBookName() + "/" + oDownloadFileRequest.getBookName() + ".zip");
+		}
 		JSONObject object = new JSONObject();
 		object.put("URL", url);
 		return object;

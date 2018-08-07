@@ -8,6 +8,7 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -164,6 +165,31 @@ public class ContentProcessor {
 			throw new FileItException(e.getMessage());
 		}
 		return oJsonObject;
+	}
+
+	public void getMultipleFileDownload(String bookname, List<String> filename, File oFile)
+			throws FileItException, IOException {
+		FileOutputStream fos = new FileOutputStream(oFile);
+		ZipOutputStream zos = new ZipOutputStream(fos);
+		CloudStorageConfig oCloudStorageConfig = new CloudStorageConfig();
+		InputStream iIP;
+		for (int i = 0; i < filename.size(); i++) {
+			try {
+				iIP = oCloudStorageConfig.getFile(CloudPropertiesReader.getInstance().getString("bucket.name"),
+						bookname + "/Contents/" + filename.get(i));
+				zos.putNextEntry(new ZipEntry(filename.get(i)));
+				byte[] bytes = new byte[1024];
+				int length;
+				while ((length = iIP.read(bytes)) >= 0) {
+					zos.write(bytes, 0, length);
+				}
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		zos.closeEntry();
+		zos.close();
 	}
 
 	public void getZipFile(String bookName, File oFile) throws FileItException, IOException {

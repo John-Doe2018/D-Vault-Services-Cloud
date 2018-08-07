@@ -49,8 +49,7 @@ public class UpdateMasterJson {
 						ErrorMessageReader.getInstance().getString(ErrorCodeConstants.ERR_CODE_0002));
 			} else {
 				try {
-					if (jsonArray == null)
-						jsonArray = new JSONArray();
+					jsonArray = new JSONArray();
 					// Add the new object to existing
 					obj.put("Name", bookObject.getName());
 					obj.put("Classification", bookObject.getClassification());
