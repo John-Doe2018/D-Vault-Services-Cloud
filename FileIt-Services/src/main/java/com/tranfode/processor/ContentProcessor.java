@@ -8,7 +8,6 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -51,12 +50,11 @@ public class ContentProcessor {
 	}
 
 	@SuppressWarnings("unchecked")
-	public JSONObject processContentImage(String bookName, InputStream inputFile, String path, String type,
-			String fileName) throws FileItException {
+	public int processContentImage(String bookName, InputStream inputFile, String path, String type, String fileName,
+			int pagecounter) throws FileItException {
 		JSONObject oJsonObject = new JSONObject();
 		CloudStorageConfig oCloudStorageConfig = new CloudStorageConfig();
 		PDDocument document = null;
-		int pagecounter = 0;
 		JSONArray oJsonArray = new JSONArray();
 		try {
 			if (type.equalsIgnoreCase("docx")) {
@@ -130,7 +128,7 @@ public class ContentProcessor {
 		} catch (Exception e) {
 			throw new FileItException(e.getMessage());
 		}
-		return oJsonObject;
+		return pagecounter;
 	}
 
 	public static String createDyanmicImagePath(int i, String bookName, String extension) {

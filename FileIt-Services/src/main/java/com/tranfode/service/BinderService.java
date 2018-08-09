@@ -45,6 +45,9 @@ import com.tranfode.domain.AddClassificationRequest;
 import com.tranfode.domain.AddClassificationResponse;
 import com.tranfode.domain.AddFileRequest;
 import com.tranfode.domain.BinderList;
+import com.tranfode.domain.BookMarkDetails;
+import com.tranfode.domain.BookMarkRequest;
+import com.tranfode.domain.BookMarkResponse;
 import com.tranfode.domain.CreateBinderRequest;
 import com.tranfode.domain.CreateBinderResponse;
 import com.tranfode.domain.DeleteBookRequest;
@@ -62,6 +65,7 @@ import com.tranfode.processor.DeleteBookProcessor;
 import com.tranfode.processor.LookupBookProcessor;
 import com.tranfode.processor.TransformationProcessor;
 import com.tranfode.processor.UpdateMasterJson;
+import com.tranfode.util.BookMarkUtil;
 import com.tranfode.util.CloudPropertiesReader;
 import com.tranfode.util.CloudStorageConfig;
 import com.tranfode.util.FileItException;
@@ -69,6 +73,7 @@ import com.tranfode.util.FileUtil;
 
 public class BinderService {
 
+	@SuppressWarnings({ "unchecked", "static-access" })
 	@POST
 	@Path("create")
 	public CreateBinderResponse createBinder(CreateBinderRequest createBinderRequest) throws FileItException {
@@ -110,6 +115,7 @@ public class BinderService {
 		CloudStorageConfig oCloudStorageConfig = new CloudStorageConfig();
 		String wordToSearchFor1 = oGetImageRequest.getBookName() + '/' + "Contents/";
 		List<String> oImages = new ArrayList<>();
+		int pagecounter = 0;
 		List<String> oList = oCloudStorageConfig
 				.listBucket(CloudPropertiesReader.getInstance().getString("bucket.name"));
 		for (String word1 : oList) {
@@ -118,8 +124,8 @@ public class BinderService {
 				String fileName = FilenameUtils.getName(word1);
 				fis = oCloudStorageConfig.getFile(CloudPropertiesReader.getInstance().getString("bucket.name"), word1);
 				ContentProcessor oContentProcessor = new ContentProcessor();
-				oContentProcessor.processContentImage(oGetImageRequest.getBookName(), fis,
-						oGetImageRequest.getBookName() + "/Images/", extension, fileName);
+				pagecounter = oContentProcessor.processContentImage(oGetImageRequest.getBookName(), fis,
+						oGetImageRequest.getBookName() + "/Images/", extension, fileName, pagecounter);
 			}
 		}
 		String wordToSearchFor = oGetImageRequest.getBookName() + "/Images/";
@@ -371,5 +377,20 @@ public class BinderService {
 		}
 
 		return getClassifications;
+	}
+
+	@POST
+	@Path("tagBook")
+	public BookMarkResponse bookMark(BookMarkRequest bookMarkRequest) throws FileItException {
+		BookMarkResponse bookMarkResponse = new BookMarkResponse();
+		String loggedInUser = bookMarkRequest.getUserName();
+		String requestedBookName = bookMarkRequest.getBookName();
+		String classificationName = bookMarkRequest.getClassificationName();
+		BookMarkDetails bookMarkdetails = new BookMarkDetails();
+		bookMarkdetails = BookMarkUtil.getInstance().saveUserBookMarkDetails(loggedInUser, requestedBookName,
+				classificationName);
+		bookMarkResponse.setBookmarkDetails(bookMarkdetails);
+		return bookMarkResponse;
+
 	}
 }

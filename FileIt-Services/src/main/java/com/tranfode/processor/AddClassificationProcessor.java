@@ -11,6 +11,7 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
 import com.tranfode.domain.AddClassificationResponse;
+import com.tranfode.domain.BusinessErrorData;
 import com.tranfode.util.CloudPropertiesReader;
 import com.tranfode.util.CloudStorageConfig;
 import com.tranfode.util.FileItException;
@@ -36,6 +37,7 @@ public class AddClassificationProcessor {
 		CloudStorageConfig oCloudStorageConfig = new CloudStorageConfig();
 		JSONParser parser = new JSONParser();
 		InputStream inputStream;
+		AddClassificationResponse oAddClassificationResponse = new AddClassificationResponse();
 		try {
 			classifcations.add(classificationName);
 			inputStream = oCloudStorageConfig.getFile(CloudPropertiesReader.getInstance().getString("bucket.name"),
@@ -43,18 +45,23 @@ public class AddClassificationProcessor {
 
 			JSONObject array = (JSONObject) parser.parse(new InputStreamReader(inputStream));
 			JSONArray jsonArray = (JSONArray) array.get("classificationList");
-			jsonArray.add(classificationName);
-			array.put("classificationList", jsonArray);
-			InputStream is = new ByteArrayInputStream(array.toJSONString().getBytes());
-			oCloudStorageConfig.uploadFile(CloudPropertiesReader.getInstance().getString("bucket.name"),
-					"ClassificationList.JSON", is, "application/json");
+			if (!jsonArray.contains(classificationName)) {
+				jsonArray.add(classificationName);
+				array.put("classificationList", jsonArray);
+				InputStream is = new ByteArrayInputStream(array.toJSONString().getBytes());
+				oCloudStorageConfig.uploadFile(CloudPropertiesReader.getInstance().getString("bucket.name"),
+						"ClassificationList.JSON", is, "application/json");
+				oAddClassificationResponse.setSuccessMsg("Classification Created Successfully");
+			} else {
+				BusinessErrorData oBusinessErrorData = new BusinessErrorData();
+				oBusinessErrorData.setDescription("Classification Already exists");
+				oAddClassificationResponse.setBusinessErrorData(oBusinessErrorData);
+			}
 		} catch (Exception e) {
 			e.printStackTrace();
 
 		}
 
-		AddClassificationResponse oAddClassificationResponse = new AddClassificationResponse();
-		oAddClassificationResponse.setSuccessMsg("Classification Created Successfully");
 		return oAddClassificationResponse;
 
 	}
