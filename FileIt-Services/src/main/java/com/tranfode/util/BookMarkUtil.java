@@ -50,39 +50,51 @@ public class BookMarkUtil {
 		bookClassMap.setClassification(bookMarkDetails.getClassification());
 		bookClassList.add(bookClassMap);
 		bookMarkDetailMap.put(bookMarkDetails.getUserName(), bookClassList);
-		System.out.println(bookMarkDetailMap.toString());
 		CloudStorageConfig oCloudStorageConfig = new CloudStorageConfig();
 		JSONParser parser = new JSONParser();
 		InputStream inputStream;
 		boolean isBookmark = true;
+		boolean newClassBookMark = false;
+		JSONArray bookMarkClass = new JSONArray();
+		boolean newUser = false;
 		try {
 			inputStream = oCloudStorageConfig.getFile(CloudPropertiesReader.getInstance().getString("bucket.name"),
 					"BookMarkDetails.JSON");
 			if (inputStream != null) {
 				Gson gson = new Gson();
 				String json = gson.toJson(bookMarkDetailMap);
-				System.out.println(json);
 				JSONObject bookArray = (JSONObject) parser.parse(new InputStreamReader(inputStream));
 				JSONArray newBookClassListObj = (JSONArray) bookArray.get(bookMarkDetails.getUserName());
 				// Check for already added bookName in the same classification
-				for (int i = 0; i < newBookClassListObj.size(); i++) {
-					JSONObject json_data = (JSONObject) newBookClassListObj.get(i);
-					String bookname = (String) json_data.get("bookName");
-					String classificationName = (String) json_data.get("classification");
-					if (classificationName.equalsIgnoreCase(bookMarkDetails.getClassification())) {
-						if (bookname.equalsIgnoreCase(bookMarkDetails.getBookName())) {
-							throw new FileItException("Bookmark already exists.");
+				if (newBookClassListObj != null) {
+					for (int i = 0; i < newBookClassListObj.size(); i++) {
+						JSONObject json_data = (JSONObject) newBookClassListObj.get(i);
+						String bookname = (String) json_data.get("bookName");
+						String classificationName = (String) json_data.get("classification");
+						if (classificationName.equalsIgnoreCase(bookMarkDetails.getClassification())) {
+							if (bookname.equalsIgnoreCase(bookMarkDetails.getBookName())) {
+								throw new FileItException("Bookmark already exists.");
+							} else {
+								isBookmark = false;
+							}
 						} else {
-							isBookmark = false;
+							newClassBookMark = true;
 						}
 					}
+				} else {
+					newClassBookMark = true;
+					newUser = true;
 				}
-				if (!isBookmark) {
-					newBookClassListObj.add(bookClassMap);
-					bookArray.put(bookMarkDetails.getUserName(), newBookClassListObj);
+				if (newClassBookMark || !isBookmark) {
+					if (!newUser) {
+						newBookClassListObj.add(bookClassMap);
+						bookArray.put(bookMarkDetails.getUserName(), newBookClassListObj);
+					} else {
+						bookMarkClass.add(bookClassMap);
+						bookArray.put(bookMarkDetails.getUserName(), bookMarkClass);
+					}
 					Gson gsonmap = new Gson();
 					String jsonmap = gsonmap.toJson(bookArray);
-					System.out.println(jsonmap);
 					InputStream is = new ByteArrayInputStream(jsonmap.getBytes());
 					oCloudStorageConfig.uploadFile(CloudPropertiesReader.getInstance().getString("bucket.name"),
 							"BookMarkDetails.JSON", is, "application/json");
@@ -94,7 +106,6 @@ public class BookMarkUtil {
 			parentObj.put("BookMarkList", jsonArray1);
 			Gson gson = new Gson();
 			String json = gson.toJson(bookMarkDetailMap);
-			System.out.println(json);
 			InputStream is = new ByteArrayInputStream(json.getBytes());
 			oCloudStorageConfig.uploadFile(CloudPropertiesReader.getInstance().getString("bucket.name"),
 					"BookMarkDetails.JSON", is, "application/json");
