@@ -393,4 +393,17 @@ public class BinderService {
 		return bookMarkResponse;
 
 	}
+
+	@POST
+	@Path("getBookMarks")
+	public BookMarkResponse getBookMarks(BookMarkRequest bookMarkRequest) throws FileItException {
+		BookMarkResponse bookMarkResponse = new BookMarkResponse();
+		String loggedInUser = bookMarkRequest.getUserName();
+
+		List<BookMarkDetails> bookMarkdetails = new ArrayList<BookMarkDetails>();
+		bookMarkdetails = BookMarkUtil.getInstance().getBookMarks(loggedInUser);
+		bookMarkResponse.setBookmarkDetailsList(bookMarkdetails);
+		return bookMarkResponse;
+
+	}
 }
