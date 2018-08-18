@@ -22,8 +22,10 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.Result;
 import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
@@ -39,6 +41,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
 
 import com.tranfode.Constants.BinderConstants;
 import com.tranfode.domain.AddClassificationRequest;
@@ -190,7 +193,7 @@ public class BinderService {
 	@Produces(MediaType.APPLICATION_JSON)
 	@Path("imageConvert")
 	public Response submit(MultipartBody multipart) throws Exception {
-		JSONObject oJsonObject;
+		JSONObject oJsonObject = null;
 		try {
 			Attachment file = multipart.getAttachment("file");
 			Attachment file1 = multipart.getAttachment("bookName");
@@ -201,13 +204,21 @@ public class BinderService {
 			String path = file2.getObject(String.class);
 			String type = file3.getObject(String.class);
 			String fileName = file4.getObject(String.class);
-			InputStream fileStream = file.getObject(InputStream.class);
-			ByteArrayOutputStream baos = new ByteArrayOutputStream();
-			org.apache.commons.io.IOUtils.copy(fileStream, baos);
-			byte[] bytes = baos.toByteArray();
-			ContentProcessor contentProcessor = ContentProcessor.getInstance();
-			ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
-			oJsonObject = contentProcessor.processContent(bookName, bais, path, type, fileName);
+			CloudStorageConfig oCloudStorageConfig = new CloudStorageConfig();
+			InputStream checkSr = oCloudStorageConfig.getFile(
+					CloudPropertiesReader.getInstance().getString("bucket.name"), bookName + "/Contents/" + fileName);
+			if (checkSr == null) {
+				InputStream fileStream = file.getObject(InputStream.class);
+				ByteArrayOutputStream baos = new ByteArrayOutputStream();
+				org.apache.commons.io.IOUtils.copy(fileStream, baos);
+				byte[] bytes = baos.toByteArray();
+				ContentProcessor contentProcessor = ContentProcessor.getInstance();
+				ByteArrayInputStream bais = new ByteArrayInputStream(bytes);
+				oJsonObject = contentProcessor.processContent(bookName, bais, path, type, fileName);
+			} else {
+				oJsonObject.put("Error", "File Already Exists");
+			}
+
 		} catch (Exception ex) {
 			return Response.status(600).entity(ex.getMessage()).build();
 		}
@@ -293,53 +304,56 @@ public class BinderService {
 	@Path("deleteFile")
 	public JSONObject deleteFile(DeleteFileRequest oDeleteFileRequest) throws FileItException {
 		CloudStorageConfig oCloudStorageConfig = new CloudStorageConfig();
-		InputStream oInputStream;
-		InputStream oInputStream1;
 		JSONObject oJsonObject = new JSONObject();
 		Element topicElement = null;
-		try {
-			oInputStream = oCloudStorageConfig.getFile(CloudPropertiesReader.getInstance().getString("bucket.name"),
-					"files/" + oDeleteFileRequest.getFileName().replaceFirst("[.][^.]+$", "") + ".JSON");
-			JSONParser parser = new JSONParser();
-			JSONArray array = (JSONArray) parser.parse(new InputStreamReader(oInputStream));
-			oInputStream.close();
-			for (int i = 0; i < array.size(); i++) {
-				oCloudStorageConfig.deleteFile(CloudPropertiesReader.getInstance().getString("bucket.name"),
-						array.get(i).toString());
-			}
-			oCloudStorageConfig.deleteFile(CloudPropertiesReader.getInstance().getString("bucket.name"),
-					"files/" + oDeleteFileRequest.getFileName().replaceFirst("[.][^.]+$", "") + ".JSON");
+		InputStream oInputStream1;
+		String path = oDeleteFileRequest.getBookName() + "/Contents/" + oDeleteFileRequest.getFileName();
+		oCloudStorageConfig.deleteFile(CloudPropertiesReader.getInstance().getString("bucket.name"), path);
+		if (oDeleteFileRequest.isBookcreated()) {
 			oInputStream1 = oCloudStorageConfig.getFile(CloudPropertiesReader.getInstance().getString("bucket.name"),
 					"files/" + oDeleteFileRequest.getBookName() + ".xml");
 			DocumentBuilderFactory docbf = DocumentBuilderFactory.newInstance();
 			docbf.setNamespaceAware(true);
-			DocumentBuilder docbuilder = docbf.newDocumentBuilder();
-			Document document = docbuilder.parse(oInputStream1);
-			NodeList fileList = document.getElementsByTagName("topic");
-			for (int i = 0; i < fileList.getLength(); i++) {
-				Node element = fileList.item(i);
-				if (element.getNodeType() == Node.ELEMENT_NODE) {
-					topicElement = (Element) element;
-					if (oDeleteFileRequest.getFileName().equals(topicElement.getAttribute("name"))) {
-						element.getParentNode().removeChild(topicElement);
-						break;
+
+			try {
+				DocumentBuilder docbuilder = docbf.newDocumentBuilder();
+				Document document = docbuilder.parse(oInputStream1);
+				NodeList fileList = document.getElementsByTagName("topic");
+				for (int i = 0; i < fileList.getLength(); i++) {
+					Node element = fileList.item(i);
+					if (element.getNodeType() == Node.ELEMENT_NODE) {
+						topicElement = (Element) element;
+						if (oDeleteFileRequest.getFileName().equals(topicElement.getAttribute("name"))) {
+							element.getParentNode().removeChild(topicElement);
+							break;
+						}
 					}
 				}
+				TransformerFactory transformerFactory = TransformerFactory.newInstance();
+				Transformer transformer = transformerFactory.newTransformer();
+				DOMSource domSource = new DOMSource(document);
+				ByteArrayOutputStream baos = new ByteArrayOutputStream();
+				Result res = new StreamResult(baos);
+				transformer.transform(domSource, res);
+				InputStream isFromFirstData = new ByteArrayInputStream(baos.toByteArray());
+				oCloudStorageConfig.uploadFile(CloudPropertiesReader.getInstance().getString("bucket.name"),
+						"files/" + oDeleteFileRequest.getBookName() + ".xml", isFromFirstData, "application/xml");
+			} catch (TransformerException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (ParserConfigurationException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (SAXException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 			}
-			TransformerFactory transformerFactory = TransformerFactory.newInstance();
-			Transformer transformer = transformerFactory.newTransformer();
-			DOMSource domSource = new DOMSource(document);
-			ByteArrayOutputStream baos = new ByteArrayOutputStream();
-			Result res = new StreamResult(baos);
-			transformer.transform(domSource, res);
-			InputStream isFromFirstData = new ByteArrayInputStream(baos.toByteArray());
-			oCloudStorageConfig.uploadFile(CloudPropertiesReader.getInstance().getString("bucket.name"),
-					"files/" + oDeleteFileRequest.getBookName() + ".xml", isFromFirstData, "application/xml");
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
 		}
 		oJsonObject.put("Success", "Deleted Successfully");
+
 		return oJsonObject;
 	}
 
