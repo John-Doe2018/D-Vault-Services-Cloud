@@ -193,7 +193,7 @@ public class BinderService {
 	@Produces(MediaType.APPLICATION_JSON)
 	@Path("imageConvert")
 	public Response submit(MultipartBody multipart) throws Exception {
-		JSONObject oJsonObject = null;
+		JSONObject oJsonObject = new JSONObject();
 		try {
 			Attachment file = multipart.getAttachment("file");
 			Attachment file1 = multipart.getAttachment("bookName");
